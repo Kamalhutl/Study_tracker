@@ -1,0 +1,11 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools-items %}
+  {% if review_count %}
+    <li>
+      <a href="?needs_review=1" class="addlink" title="{{ review_count }} job(s) awaiting review">
+        Review queue ({{ review_count }})
+      </a>
+    </li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

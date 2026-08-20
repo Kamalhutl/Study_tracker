@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+{% block content %}
+<div id="content-main">
+  <p style="background:#fff8dc;border:1px solid #e6d48a;padding:0.75rem 1rem;border-radius:4px">{{ blurb }}</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-row" style="margin-bottom:0.75rem">
+        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+        {{ field }}
+        {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+    {% endfor %}
+    <div class="submit-row">
+      <input type="submit" value="Save" class="default">
+      <a href="{% url 'admin:companies_company_changelist' %}" class="button cancel-link">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

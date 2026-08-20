@@ -1,0 +1,391 @@
+openapi: 3.0.3
+info:
+  title: Job + Exam Portal API
+  version: 0.1.0
+  description: 'Phase 1 MVP: accounts + JWT auth + audit log core.'
+paths:
+  /api/v1/auth/firebase-token/:
+    post:
+      operationId: api_v1_auth_firebase_token_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FcmTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FcmTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FcmTokenRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FcmToken'
+          description: ''
+  /api/v1/auth/login/:
+    post:
+      operationId: api_v1_auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPairRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/logout/:
+    post:
+      operationId: api_v1_auth_logout_create
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '205':
+          description: Refresh token blacklisted
+        '400':
+          description: Invalid or expired refresh token
+  /api/v1/auth/me/:
+    get:
+      operationId: api_v1_auth_me_retrieve
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMe'
+          description: ''
+        '401':
+          description: Not authenticated
+    patch:
+      operationId: api_v1_auth_me_partial_update
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMe'
+          description: ''
+        '401':
+          description: Not authenticated
+  /api/v1/auth/password/change/:
+    post:
+      operationId: api_v1_auth_password_change_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: Password changed, all tokens blacklisted
+        '400':
+          description: Validation error
+  /api/v1/auth/refresh/:
+    post:
+      operationId: api_v1_auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RotatingRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RotatingRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RotatingRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RotatingRefresh'
+          description: ''
+  /api/v1/auth/register/:
+    post:
+      operationId: api_v1_auth_register_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMe'
+          description: ''
+  /healthz:
+    get:
+      operationId: healthz_retrieve
+      description: 'Liveness: the process is up. No dependencies touched.'
+      tags:
+      - health
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: 'Liveness: process is up'
+  /readyz:
+    get:
+      operationId: readyz_retrieve
+      description: 'Readiness: DB responds to SELECT 1 and Redis pings. 503 if either
+        fails.'
+      tags:
+      - health
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: 'Readiness: DB + Redis healthy'
+components:
+  schemas:
+    BlankEnum:
+      enum:
+      - ''
+    CategoryEnum:
+      enum:
+      - GEN
+      - OBC
+      - SC
+      - ST
+      - EWS
+      type: string
+      description: |-
+        * `GEN` - General
+        * `OBC` - OBC
+        * `SC` - SC
+        * `ST` - ST
+        * `EWS` - EWS
+    CustomTokenObtainPairRequest:
+      type: object
+      description: Adds ``role`` + ``email`` claims and tracks login metadata.
+      properties:
+        email:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    FcmToken:
+      type: object
+      properties:
+        fcm_token:
+          type: string
+          maxLength: 255
+      required:
+      - fcm_token
+    FcmTokenRequest:
+      type: object
+      properties:
+        fcm_token:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - fcm_token
+    PasswordChangeRequest:
+      type: object
+      properties:
+        old_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password2:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - new_password
+      - new_password2
+      - old_password
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password2:
+          type: string
+          writeOnly: true
+          minLength: 1
+        full_name:
+          type: string
+          maxLength: 120
+      required:
+      - email
+      - password
+      - password2
+    RotatingRefresh:
+      type: object
+      description: |-
+        Like the stock refresh serializer but reissues the rotated token through
+        ``RefreshToken.for_user`` so every rotation-issued refresh gets an
+        ``OutstandingToken`` row. Stock simplejwt mutates the old token in place and
+        never records the new jti, which silently breaks "blacklist all outstanding
+        tokens on password change".
+      properties:
+        refresh:
+          type: string
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    RotatingRefreshRequest:
+      type: object
+      description: |-
+        Like the stock refresh serializer but reissues the rotated token through
+        ``RefreshToken.for_user`` so every rotation-issued refresh gets an
+        ``OutstandingToken`` row. Stock simplejwt mutates the old token in place and
+        never records the new jti, which silently breaks "blacklist all outstanding
+        tokens on password change".
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    UserMe:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 120
+        phone:
+          type: string
+          nullable: true
+          pattern: ^\+[1-9]\d{1,14}$
+          maxLength: 15
+        role:
+          type: string
+          readOnly: true
+        dob:
+          type: string
+          format: date
+          nullable: true
+        age:
+          type: integer
+          readOnly: true
+        education:
+          type: string
+          maxLength: 80
+        category:
+          oneOf:
+          - $ref: '#/components/schemas/CategoryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        state:
+          type: string
+          maxLength: 80
+        years_of_experience:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,1})?$
+          nullable: true
+        email_verified_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - age
+      - created_at
+      - email
+      - email_verified_at
+      - id
+      - role
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

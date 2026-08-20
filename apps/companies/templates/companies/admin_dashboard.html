@@ -1,0 +1,60 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% block content %}
+<div id="content-main">
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
+    <div style="border:1px solid #ccc;border-radius:6px;padding:1rem;min-width:180px">
+      <h3>Companies</h3>
+      <ul>
+        <li>Total: <strong>{{ company_total }}</strong></li>
+        <li>Verified: <strong>{{ company_verified }}</strong></li>
+        <li>Pending detection: <strong>{{ company_pending_detection }}</strong></li>
+        <li>Needs review: <strong>{{ company_needs_review }}</strong></li>
+      </ul>
+    </div>
+    <div style="border:1px solid #ccc;border-radius:6px;padding:1rem;min-width:180px">
+      <h3>Scrape health</h3>
+      <ul>
+        {% for value, count, href in health_rows %}
+          <li><a href="{{ href }}">{{ value }}</a>: <strong>{{ count }}</strong></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div style="border:1px solid #ccc;border-radius:6px;padding:1rem;min-width:180px">
+      <h3>Jobs</h3>
+      <ul>
+        {% for value, count, href in job_rows %}
+          <li><a href="{{ href }}">{{ value }}</a>: <strong>{{ count }}</strong></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div style="border:1px solid #ccc;border-radius:6px;padding:1rem;min-width:180px">
+      <h3>Scheduler</h3>
+      <p>Due now: <strong>{{ due_now_count }}</strong></p>
+      <p>Next scrape: {{ next_scrape_at|default:"—" }}</p>
+    </div>
+  </div>
+  <div id="content-related" style="width:100%">
+    <div class="module" style="padding:0 1rem">
+      <h2>Last 10 detection runs</h2>
+      <table style="width:100%">
+        <thead><tr><th>Company</th><th>Status</th><th>Started</th><th>Duration (ms)</th><th>URLs</th><th>Candidates</th></tr></thead>
+        <tbody>
+          {% for run in last_detection_runs %}
+          <tr>
+            <td>{{ run.company.name }}</td>
+            <td>{{ run.status }}</td>
+            <td>{{ run.started_at }}</td>
+            <td>{{ run.duration_ms|default:"—" }}</td>
+            <td>{{ run.urls_checked }}</td>
+            <td>{{ run.candidates_found }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6">No detection runs yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

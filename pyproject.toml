@@ -1,0 +1,87 @@
+[project]
+name = "study_tracker"
+version = "0.1.0"
+description = "Job + Govt Exam Portal backend (Phase 1 MVP)."
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.ruff]
+line-length = 100
+src = ["."]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "RUF"]
+ignore = ["E501", "RUF012"]
+
+[tool.ruff.lint.per-file-ignores]
+"*/migrations/*" = ["E501"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  \.mypy_cache
+  |\.venv
+  |venv
+  |__pycache__
+)/
+'''
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+strict = true
+warn_unused_ignores = true
+exclude = "migrations/"
+
+[[tool.mypy.overrides]]
+module = ["celery.*", "kombu.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["config.settings.*", "config.settings"]
+disable_error_code = ["type-arg"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disable_error_code = ["no-untyped-def", "no-any-unimported", "no-untyped-call", "attr-defined"]
+disallow_incomplete_defs = false
+check_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["factory", "factory.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.dev"
+
+["mypy-apps.accounts.migrations.*"]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+addopts = "-p no:cacheprovider"
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:django*",
+    "ignore:.*_after_postgeneration will stop saving.*:DeprecationWarning:factory.django",
+]
+
+[tool.coverage.run]
+source = ["config", "core", "apps", "manage.py"]
+branch = true
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "class .*\\(bases[^)]*, \\):",
+    ".*assert_never.*",
+    "raise AssertionError",
+    "if __name__ == .__main__.:",
+]
+show_missing = true
+fail_under = 88

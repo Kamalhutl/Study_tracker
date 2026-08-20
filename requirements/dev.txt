@@ -1,0 +1,13 @@
+-r base.txt
+pytest>=8.3,<9
+pytest-django>=4.9,<5
+pytest-cov>=5.0,<7
+factory-boy>=3.3,<4
+freezegun>=1.5,<2
+ruff>=0.8,<0.9
+black>=24.10,<25
+mypy>=1.14,<2
+django-stubs>=5.1,<6
+djangorestframework-stubs>=3.15,<4
+types-requests>=2.32,<3
+pre-commit>=4.0,<5

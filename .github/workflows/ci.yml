@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: study_tracker
+          POSTGRES_USER: study_tracker
+          POSTGRES_PASSWORD: study_tracker
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U study_tracker"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DB_NAME: study_tracker
+      DB_USER: study_tracker
+      DB_PASSWORD: study_tracker
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      REDIS_URL: redis://127.0.0.1:6379
+      SECRET_KEY: ci-only-not-secret-please-change-me
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dev requirements
+        run: pip install -r requirements/dev.txt
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Black check
+        run: black --check .
+
+      - name: Mypy
+        run: mypy --config-file pyproject.toml .
+
+      - name: Migrations in sync
+        run: python manage.py makemigrations --check --dry-run
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.dev
+
+      - name: Pytest with coverage
+        run: pytest --cov --cov-fail-under=85
