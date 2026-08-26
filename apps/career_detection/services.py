@@ -51,9 +51,34 @@ def run_detection(
 
     ``dry_run=True`` persists nothing (audit trail included): all candidates and
     the run row are kept in memory only.
+
+    Phases:
+    1. Guard (Redis, no DB transaction): acquire per-company lock.
+    2. Eligibility + run row (short transaction): re-read company, create run.
+    3. Strategies (NO transaction, NO row lock): all network I/O here.
+    4. Persist (short transaction): write candidates, finalize run, audit log.
     """
-    with transaction.atomic():
-        return _run_detection_impl(company, actor=actor, dry_run=dry_run, max_checks=max_checks)
+    # Phase 1: Guard — Redis lock, no DB transaction
+    lock_key = f"detect:{company.pk}"
+    try:
+        # Non-blocking; TTL comfortably above 120s detection budget
+        with redis_lock(lock_key, timeout=LOCK_TTL_SECONDS, blocking=False):
+            return _run_detection_phased(
+                company, actor=actor, dry_run=dry_run, max_checks=max_checks
+            )
+    except LockNotAcquired:
+        logger.warning("Detection already in flight for company %s; skipping", company.pk)
+        return {
+            "company_id": str(company.pk),
+            "run_id": None,
+            "dry_run": dry_run,
+            "status": DetectionStatus.FAILED,
+            "candidates": [],
+            "best_score": 0,
+            "checks_used": 0,
+            "notes": ["detection already in flight"],
+            "short_circuited": False,
+        }
 
 
 def _candidate_summaries(
@@ -62,31 +87,37 @@ def _candidate_summaries(
     return [{"url": c.url, "origin": c.origin, "score": s, "trail": t} for c, s, t in ranked]
 
 
-def _run_detection_impl(
+def _run_detection_phased(
     company: Company,
     *,
     actor: Any = None,
     dry_run: bool = False,
     max_checks: int | None = None,
 ) -> dict[str, Any]:
-    company = Company.objects.select_for_update().filter(pk=company.pk).first()
-    if company is None:
-        raise DetectionNotApplicable("Company no longer exists")
-    if company.is_deleted:
-        raise DetectionNotApplicable("Company is soft-deleted")
-    if company.is_verified and bool(company.career_url):
-        raise DetectionNotApplicable("Company is already verified with a career URL")
+    """Internal implementation with four phases: Guard, Eligibility, Strategies, Persist."""
 
-    started = time.monotonic()
-    ctx = DetectionContext(
-        company=company,
-        root_url=_root_url(company.domain),
-        domain=company.domain,
-        max_checks=max_checks or settings.DETECTION_MAX_URL_CHECKS,
-        deadline=started + settings.DETECTION_TOTAL_BUDGET_SECONDS,
-    )
-    run = _start_run(company, dry_run=dry_run)
+    # Phase 2: Eligibility + run row (short transaction)
+    run = None
+    with transaction.atomic():
+        company = Company.objects.filter(pk=company.pk).first()
+        if company is None:
+            raise DetectionNotApplicable("Company no longer exists")
+        if company.is_deleted:
+            raise DetectionNotApplicable("Company is soft-deleted")
+        if company.is_verified and bool(company.career_url):
+            raise DetectionNotApplicable("Company is already verified with a career URL")
 
+        started = time.monotonic()
+        ctx = DetectionContext(
+            company=company,
+            root_url=_root_url(company.domain),
+            domain=company.domain,
+            max_checks=max_checks or settings.DETECTION_MAX_URL_CHECKS,
+            deadline=started + settings.DETECTION_TOTAL_BUDGET_SECONDS,
+        )
+        run = _start_run(company, dry_run=dry_run)
+
+    # Phase 3: Strategies (NO transaction, NO row lock)
     results: dict[str, Any] = {
         "company_id": str(company.pk),
         "run_id": str(run.pk) if run is not None else None,
@@ -107,32 +138,25 @@ def _run_detection_impl(
         results["notes"] = list(ctx.notes)
 
         if ctx.homepage_error:
-            status = DetectionStatus.FAILED
-            company.detection_status = status
-            ctx.notes.insert(0, f"homepage unreachable {company.domain}: {ctx.homepage_error}")
+            final_status = DetectionStatus.FAILED
         elif not ranked:
-            status = DetectionStatus.NO_CANDIDATES
-            company.detection_status = status
+            final_status = DetectionStatus.NO_CANDIDATES
         else:
-            status = DetectionStatus.CANDIDATES_FOUND
-            company.detection_status = status
+            final_status = DetectionStatus.CANDIDATES_FOUND
             results["candidates"] = _candidate_summaries(ranked)
             results["best_score"] = max(s for _, s, _ in ranked)
 
-        _finish_run(
-            company,
-            run,
-            ctx,
+        # Phase 4: Persist (short transaction) — re-read company and re-check eligibility
+        _persist_results(
+            company=company,
+            run=run,
+            ctx=ctx,
             ranked=ranked,
-            company_status=status,
-            run_status=(
-                DetectionStatus.SUCCESS
-                if status != DetectionStatus.FAILED
-                else DetectionStatus.FAILED
-            ),
+            final_status=final_status,
             dry_run=dry_run,
             actor=actor,
             started=started,
+            results=results,
         )
         results["status"] = DetectionStatus.SUCCESS
     except FetchBudgetExceeded as exc:
@@ -148,35 +172,157 @@ def _run_detection_impl(
             partial_status = DetectionStatus.NO_CANDIDATES
         results["candidates"] = _candidate_summaries(partial_ranked)
         results["best_score"] = max((s for _, s, _ in partial_ranked), default=0)
-        company.detection_status = partial_status
-        _finish_run(
-            company,
-            run,
-            ctx,
+
+        _persist_results(
+            company=company,
+            run=run,
+            ctx=ctx,
             ranked=partial_ranked,
-            company_status=partial_status,
-            run_status=DetectionStatus.PARTIAL,
+            final_status=partial_status,
             dry_run=dry_run,
             actor=actor,
             started=started,
+            results=results,
+            run_status=DetectionStatus.PARTIAL,
         )
         results["status"] = DetectionStatus.PARTIAL
     except Exception as exc:
         logger.exception("Detection failed for company %s", company)
-        company.detection_status = DetectionStatus.FAILED
-        company.save(update_fields=["detection_status"])
-        if run is not None:
-            run.status = DetectionStatus.FAILED
-            run.finished_at = timezone.now()
-            run.error_message = str(exc)
-            run.notes = "\n".join([*ctx.notes, str(exc)])[:2000]
-            run.save(update_fields=["status", "finished_at", "error_message", "notes"])
         results["status"] = DetectionStatus.FAILED
         results["notes"] = [*list(ctx.notes), str(exc)]
+        if run is not None and not dry_run:
+            with transaction.atomic():
+                # Update company detection_status
+                company = Company.objects.filter(pk=company.pk).first()
+                if company is not None:
+                    company.detection_status = DetectionStatus.FAILED
+                    company.save(update_fields=["detection_status"])
+
+                run.status = DetectionStatus.FAILED
+                run.finished_at = timezone.now()
+                run.error_message = str(exc)
+                run.notes = "\n".join([*ctx.notes, str(exc)])[:2000]
+                run.save(update_fields=["status", "finished_at", "error_message", "notes"])
+        elif run is None and not dry_run:
+            # run was None but not dry_run - shouldn't happen, but guard
+            company = Company.objects.filter(pk=company.pk).first()
+            if company is not None:
+                company.detection_status = DetectionStatus.FAILED
+                company.save(update_fields=["detection_status"])
         if dry_run:
             raise
 
     return results
+
+
+def _persist_results(
+    company: Company,
+    run: DetectionRun | None,
+    ctx: DetectionContext,
+    ranked: list[tuple[RawCandidate, int, list[dict[str, Any]]]],
+    final_status: str,
+    dry_run: bool,
+    actor: Any,
+    started: float,
+    results: dict[str, Any],
+    run_status: str | None = None,
+) -> None:
+    """Phase 4: short transaction to persist results. Re-reads company and re-checks eligibility."""
+    if dry_run:
+        return
+
+    with transaction.atomic():
+        # Re-read company and re-check eligibility (race guard)
+        # Use all_objects to include soft-deleted companies
+        company = Company.all_objects.filter(pk=company.pk).first()
+        if company is None:
+            # Company deleted mid-run: mark run superseded if it exists
+            if run is not None:
+                run.status = DetectionStatus.SUPERSEDED
+                run.finished_at = timezone.now()
+                run.notes = "company deleted mid-run"
+                run.save(update_fields=["status", "finished_at", "notes"])
+            results["status"] = DetectionStatus.SUPERSEDED
+            results["notes"].append("company deleted mid-run")
+            return
+
+        if company.is_deleted:
+            if run is not None:
+                run.status = DetectionStatus.SUPERSEDED
+                run.finished_at = timezone.now()
+                run.notes = "company soft-deleted mid-run"
+                run.save(update_fields=["status", "finished_at", "notes"])
+            results["status"] = DetectionStatus.SUPERSEDED
+            results["notes"].append("company soft-deleted mid-run")
+            return
+
+        if company.is_verified and bool(company.career_url):
+            if run is not None:
+                run.status = DetectionStatus.SUPERSEDED
+                run.finished_at = timezone.now()
+                run.notes = "company became verified mid-run"
+                run.save(update_fields=["status", "finished_at", "notes"])
+            results["status"] = DetectionStatus.SUPERSEDED
+            results["notes"].append("company became verified mid-run")
+            return
+
+        # All checks passed — persist
+        candidate_rows = ranked[: settings.DETECTION_MAX_CANDIDATES]
+        assert run is not None, "run is only None for dry runs"
+
+        finished = timezone.now()
+        company.detection_status = final_status
+        company.detection_attempts = company.detection_attempts + 1
+        company.last_detection_at = finished
+        company.save(
+            update_fields=[
+                "detection_status",
+                "detection_attempts",
+                "last_detection_at",
+            ]
+        )
+
+        for candidate, score, trail in candidate_rows:
+            _upsert_candidate(run, company, candidate, score, trail)
+
+        run.finished_at = finished
+        run.duration_ms = int((time.monotonic() - started) * 1000)
+        run.status = run_status or (
+            DetectionStatus.SUCCESS
+            if final_status != DetectionStatus.FAILED
+            else DetectionStatus.FAILED
+        )
+        run.urls_checked = ctx.checks_used
+        run.checks_used = ctx.checks_used
+        run.candidates_found = len(candidate_rows)
+        run.ats_short_circuit = ctx.ats_short_circuit
+        run.strategies_used = _strategies_used(ctx)
+        run.notes = "\n".join(ctx.notes)[:2000]
+        run.log += [
+            {"ts": finished.isoformat(), "msg": "detection finished", "status": final_status}
+        ]
+        run.save(
+            update_fields=[
+                "status",
+                "finished_at",
+                "duration_ms",
+                "urls_checked",
+                "checks_used",
+                "candidates_found",
+                "ats_short_circuit",
+                "strategies_used",
+                "notes",
+                "log",
+            ]
+        )
+
+    record(
+        "detection.completed",
+        actor=actor,
+        instance=run,
+        after={"status": run.status, "candidates": len(candidate_rows), "checks": ctx.checks_used},
+        source="SYSTEM",
+    )
 
 
 def _root_url(domain: str) -> str:
@@ -246,75 +392,6 @@ def _rank(
         )
     )
     return ranked[: settings.DETECTION_MAX_CANDIDATES], ctx.ats_short_circuit
-
-
-def _finish_run(
-    company: Company,
-    run: DetectionRun | None,
-    ctx: DetectionContext,
-    *,
-    ranked: list[tuple[RawCandidate, int, list[dict[str, Any]]]],
-    company_status: str,
-    run_status: str,
-    dry_run: bool,
-    actor: Any,
-    started: float,
-) -> None:
-    candidate_rows = ranked[: settings.DETECTION_MAX_CANDIDATES]
-    if dry_run:
-        return
-    assert run is not None, "run is only None for dry runs"
-
-    finished = timezone.now()
-    with transaction.atomic():
-        company.detection_status = company_status
-        company.detection_attempts = company.detection_attempts + 1
-        company.last_detection_at = finished
-        company.save(
-            update_fields=[
-                "detection_status",
-                "detection_attempts",
-                "last_detection_at",
-            ]
-        )
-
-        for candidate, score, trail in candidate_rows:
-            _upsert_candidate(run, company, candidate, score, trail)
-
-        run.finished_at = finished
-        run.duration_ms = int((time.monotonic() - started) * 1000)
-        run.status = run_status
-        run.urls_checked = ctx.checks_used
-        run.checks_used = ctx.checks_used
-        run.candidates_found = len(candidate_rows)
-        run.ats_short_circuit = ctx.ats_short_circuit
-        run.strategies_used = _strategies_used(ctx)
-        run.notes = "\n".join(ctx.notes)[:2000]
-        run.log += [
-            {"ts": finished.isoformat(), "msg": "detection finished", "status": company_status}
-        ]
-        run.save(
-            update_fields=[
-                "status",
-                "finished_at",
-                "duration_ms",
-                "urls_checked",
-                "checks_used",
-                "candidates_found",
-                "ats_short_circuit",
-                "strategies_used",
-                "notes",
-                "log",
-            ]
-        )
-
-    record(
-        "detection.completed",
-        actor=actor,
-        instance=run,
-        after={"status": run.status, "candidates": len(candidate_rows), "checks": ctx.checks_used},
-        source="SYSTEM",
-    )
 
 
 def _upsert_candidate(

@@ -19,7 +19,6 @@ from apps.audit_logs.services import record, snapshot
 from core.utils import normalize_url
 
 from .enums import (
-    BLOCKED_DOMAINS,
     MAX_CONSECUTIVE_FAILURES,
     MIN_SCRAPE_INTERVAL_MINUTES,
     CandidateStatus,
@@ -53,9 +52,9 @@ def _host_of(url: str) -> str:
 
 
 def _is_blocked(host: str) -> bool:
-    if not host:
-        return False
-    return any(host == domain or host.endswith(f".{domain}") for domain in BLOCKED_DOMAINS)
+    from .enums import is_blocked_domain
+
+    return is_blocked_domain(host)
 
 
 def _extract_domain(url: str) -> str:

@@ -31,6 +31,17 @@ def test_blocked_domain_matches_subdomain():
     assert "blocked_domain" in rules(score, trail)
 
 
+def test_missing_domain_evidence_disqualifies():
+    # foreign_host must fail closed when evidence['domain'] is absent or empty
+    score, trail = score_candidate(url="https://example.com/careers", evidence={})
+    assert score == 0
+    assert rules(score, trail) == {"missing_domain_evidence"}
+
+    score, trail = score_candidate(url="https://example.com/careers", evidence={"domain": ""})
+    assert score == 0
+    assert rules(score, trail) == {"missing_domain_evidence"}
+
+
 def test_bad_status_disqualifies():
     score, trail = score_candidate(
         url="https://example.com/careers",
@@ -157,7 +168,9 @@ def test_career_subdomain_fires_for_jobs_subdomain():
 
 
 def test_workday_host_negative():
-    score, trail = score_candidate(url="https://acme.myworkdayjobs.com/careers", evidence={})
+    score, trail = score_candidate(
+        url="https://acme.myworkdayjobs.com/careers", evidence={"domain": "acme.com"}
+    )
     assert "workday" in rules(score, trail)
     assert "ats_host" not in rules(score, trail)
     assert score == 5  # 25 keyword - 20 workday
@@ -296,7 +309,7 @@ def test_absent_evidence_counts_false():
         # 1. ATS board host: 40 + 5 + 20
         (
             "https://boards.greenhouse.io/acme",
-            {"http_200": True, "multiple_job_links": True},
+            {"domain": "acme.com", "http_200": True, "multiple_job_links": True},
             65,
             {"ats_host", "http_200", "multiple_job_links"},
         ),
@@ -304,6 +317,7 @@ def test_absent_evidence_counts_false():
         (
             "https://acme.com/careers",
             {
+                "domain": "acme.com",
                 "http_200": True,
                 "nav_header": True,
                 "title_keyword": True,
@@ -323,14 +337,24 @@ def test_absent_evidence_counts_false():
         # 3. Career subdomain: 18 + 5 + 10 + 30
         (
             "https://careers.acme.com/",
-            {"http_200": True, "nav_footer": True, "json_ld_jobposting": True},
+            {
+                "domain": "acme.com",
+                "http_200": True,
+                "nav_footer": True,
+                "json_ld_jobposting": True,
+            },
             63,
             {"career_subdomain", "http_200", "nav_footer", "json_ld_jobposting"},
         ),
         # 4. Deep detail page: 25-15-10+5+30 (deep_path derived from path)
         (
             "https://acme.com/careers/engineering/senior-backend-42",
-            {"single_posting": True, "http_200": True, "json_ld_jobposting": True},
+            {
+                "domain": "acme.com",
+                "single_posting": True,
+                "http_200": True,
+                "json_ld_jobposting": True,
+            },
             35,
             {
                 "career_path_keyword",
@@ -343,28 +367,33 @@ def test_absent_evidence_counts_false():
         # 5. Noise path cancels the keyword, clamped at 0: 25-30+5
         (
             "https://acme.com/blog/we-are-hiring-2024",
-            {"http_200": True},
+            {"domain": "acme.com", "http_200": True},
             0,
             {"career_path_keyword", "noise_path", "http_200"},
         ),
         # 6. Asset extension cancels the keyword, clamped at 0: 25-40+5
         (
             "https://acme.com/careers.pdf",
-            {"http_200": True},
+            {"domain": "acme.com", "http_200": True},
             0,
             {"career_path_keyword", "pdf_or_asset", "http_200"},
         ),
         # 7. Blocked domain: 0, single-rule trail
         (
             "https://linkedin.com/company/acme/jobs",
-            {"http_200": True, "json_ld_jobposting": True, "nav_header": True},
+            {
+                "domain": "acme.com",
+                "http_200": True,
+                "json_ld_jobposting": True,
+                "nav_header": True,
+            },
             0,
             {"blocked_domain"},
         ),
         # 8. Non-2xx status: 0, single-rule trail
         (
             "https://acme.com/careers",
-            {"http_status": 404},
+            {"domain": "acme.com", "http_status": 404},
             0,
             {"bad_status"},
         ),
@@ -372,6 +401,7 @@ def test_absent_evidence_counts_false():
         (
             "https://acme.com/careers",
             {
+                "domain": "acme.com",
                 "explicit_no_openings": True,
                 "http_200": True,
                 "nav_header": True,
@@ -389,7 +419,7 @@ def test_absent_evidence_counts_false():
         # 10. Workday board, recorded but never suggested: 25-20+5
         (
             "https://acme.myworkdayjobs.com/careers",
-            {"http_200": True},
+            {"domain": "acme.com", "http_200": True},
             10,
             {"career_path_keyword", "workday", "http_200"},
         ),
@@ -398,7 +428,7 @@ def test_absent_evidence_counts_false():
 def test_spec_worked_examples(
     url: str, evidence: dict[str, Any], expected: int, expected_trail: set[str]
 ):
-    # Spec table supplies no `domain` — foreign_host must not fire for these.
+    # Spec table now supplies `domain` — foreign_host must not fire for these.
     score, trail = score_candidate(url=url, evidence={**evidence})
     assert score == expected, [r["rule"] for r in trail]
     assert {r["rule"] for r in trail} == expected_trail

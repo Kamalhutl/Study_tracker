@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apps.companies.services import _is_blocked
+from apps.companies.enums import is_blocked_domain
 
 from .extract import (
     is_ats_host,
@@ -87,7 +87,7 @@ def score_candidate(*, url: str, evidence: dict[str, Any]) -> tuple[int, list[di
 
     # --- Hard disqualifiers (first; any hit short-circuits) -----------------
     host = _host(url)
-    if _is_blocked(host):
+    if is_blocked_domain(host):
         return (0, [_rule("blocked_domain", 0, f"host {host} is blocked")])
 
     if _bad_status(evidence):
@@ -97,7 +97,18 @@ def score_candidate(*, url: str, evidence: dict[str, Any]) -> tuple[int, list[di
         return (0, [_rule("bad_scheme", 0, f"scheme {_scheme(url) or 'missing'}")])
 
     registrable = evidence.get("domain") or ""
-    if registrable and not (is_own_host(host, registrable) or is_ats_host(host)):
+    if not registrable:
+        return (
+            0,
+            [
+                _rule(
+                    "missing_domain_evidence",
+                    0,
+                    "evidence['domain'] is required for foreign_host check",
+                )
+            ],
+        )
+    if not (is_own_host(host, registrable) or is_ats_host(host) or is_workday_host(host)):
         return (0, [_rule("foreign_host", 0, f"host {host} is not the company's domain")])
 
     # --- Positive rules (spec order) ----------------------------------------

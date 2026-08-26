@@ -42,6 +42,7 @@ class DetectionStatus(models.TextChoices):
     NO_CANDIDATES = "no_candidates"
     SUCCESS = "success"
     PARTIAL = "partial"
+    SUPERSEDED = "superseded"
 
 
 class ScrapeHealth(models.TextChoices):
@@ -92,6 +93,19 @@ BLOCKED_DOMAINS: frozenset[str] = frozenset(
         "timesjobs.com",
     }
 )
+
+
+def is_blocked_domain(host: str) -> bool:
+    """True if ``host`` (or a subdomain of it) is in :data:`BLOCKED_DOMAINS`.
+
+    Subdomain matching: ``careers.linkedin.com`` matches ``linkedin.com``
+    while ``notlinkedin.com`` does not.
+    """
+    if not host:
+        return False
+    host = host.lower()
+    return any(host == domain or host.endswith(f".{domain}") for domain in BLOCKED_DOMAINS)
+
 
 MIN_SCRAPE_INTERVAL_MINUTES = 30
 DEFAULT_SCRAPE_INTERVAL_MINUTES = 300  # 5 hours
