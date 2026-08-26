@@ -1,0 +1,11 @@
+{
+  "domain": "acmenone.example.com",
+  "robots": null,
+  "responses": {
+    "https://acmenone.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme None</title></head><body><main><p>A perfectly normal corporate site with no careers anywhere.</p></main></body></html>"
+    }
+  },
+  "heads": {}
+}

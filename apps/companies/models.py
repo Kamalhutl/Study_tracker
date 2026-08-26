@@ -240,6 +240,7 @@ class CareerCandidateUrl(UUIDModel, TimeStampedModel):
     url = models.URLField(max_length=1000)
     normalized_url = models.CharField(max_length=1000, db_index=True)
     origin = models.CharField(max_length=32, choices=CandidateOrigin.choices)
+    discovered_via = models.CharField(max_length=255, blank=True)
     guessed_type = models.CharField(
         max_length=32, choices=CareerSourceType.choices, default=CareerSourceType.UNKNOWN
     )
@@ -298,8 +299,11 @@ class DetectionRun(UUIDModel, TimeStampedModel):
     finished_at = models.DateTimeField(null=True, blank=True)
     duration_ms = models.PositiveIntegerField(null=True, blank=True)
     urls_checked = models.PositiveIntegerField(default=0)
+    checks_used = models.PositiveIntegerField(default=0)
     candidates_found = models.PositiveIntegerField(default=0)
     strategies_used = models.JSONField(default=list)
+    ats_short_circuit = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
     error_message = models.TextField(blank=True)
     log = models.JSONField(default=list)
 

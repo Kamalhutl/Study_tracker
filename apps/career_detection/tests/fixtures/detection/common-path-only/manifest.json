@@ -1,0 +1,18 @@
+{
+  "domain": "acmepath.example.com",
+  "robots": null,
+  "responses": {
+    "https://acmepath.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme Path</title></head><body><main><p>No nav clues; only /careers exists.</p></main></body></html>"
+    },
+    "https://acmepath.example.com/careers": {
+      "status": 200,
+      "body_file": "careers.html",
+      "final_url": "https://acmepath.example.com/careers"
+    }
+  },
+  "heads": {
+    "https://acmepath.example.com/careers": 206
+  }
+}

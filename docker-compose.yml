@@ -59,12 +59,16 @@ services:
   worker:
     build:
       context: .
-      target: dev
+      target: worker
+    # Browsers leak memory; cap the worker hard at 2g.
+    mem_limit: 2g
     command: celery -A config worker -l info -Q default,scraping,notifications --concurrency=${CELERY_WORKER_CONCURRENCY:-2}
     environment:
       <<: *app-env
     volumes:
       - .:/app
+      # Scrapling adaptive-selector storage (learned selectors survive restarts).
+      - scrapling-adaptive:/app/var/scrapling
     depends_on:
       db:
         condition: service_healthy
@@ -91,3 +95,4 @@ services:
 volumes:
   pgdata:
   redisdata:
+  scrapling-adaptive:

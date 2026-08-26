@@ -1,0 +1,24 @@
+{
+  "domain": "acmenav.example.com",
+  "robots": null,
+  "responses": {
+    "https://acmenav.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme Nav</title></head><body><header><nav><a href=\"/careers/\">Careers</a></nav></header><footer><a href=\"/join-us\">Join Us</a></footer></body></html>"
+    },
+    "https://acmenav.example.com/careers": {
+      "status": 200,
+      "body_file": "careers.html",
+      "final_url": "https://acmenav.example.com/careers"
+    },
+    "https://acmenav.example.com/join-us": {
+      "status": 200,
+      "body": "<html><head><title>Join Us</title></head><body><p>We are hiring, see openings.</p></body></html>",
+      "final_url": "https://acmenav.example.com/join-us"
+    }
+  },
+  "heads": {
+    "https://acmenav.example.com/careers": 206,
+    "https://acmenav.example.com/join-us": 206
+  }
+}

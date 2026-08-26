@@ -1,0 +1,18 @@
+{
+  "domain": "acmegreen.example.com",
+  "robots": null,
+  "responses": {
+    "https://acmegreen.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme Green</title></head><body><header><a href=\"https://boards.greenhouse.io/acme-corp\">Careers at Acme</a></header><main><p>We make plants.</p></main></body></html>"
+    },
+    "https://boards.greenhouse.io/acme-corp": {
+      "status": 200,
+      "body_file": "board.html",
+      "final_url": "https://boards.greenhouse.io/acme-corp"
+    }
+  },
+  "heads": {
+    "https://boards.greenhouse.io/acme-corp": 206
+  }
+}

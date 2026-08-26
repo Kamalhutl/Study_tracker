@@ -1,0 +1,24 @@
+{
+  "domain": "acmesitemap.example.com",
+  "robots": {
+    "status": 200,
+    "body": "User-agent: *\nSitemap: https://acmesitemap.example.com/sitemap.xml\n"
+  },
+  "responses": {
+    "https://acmesitemap.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme Sitemap</title></head><body><main><p>Everything lives in the sitemap.</p></main></body></html>"
+    },
+    "https://acmesitemap.example.com/sitemap.xml": {
+      "status": 200,
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"><url><loc>https://acmesitemap.example.com/careers</loc></url><url><loc>https://acmesitemap.example.com/openings</loc></url><url><loc>https://acmesitemap.example.com/about</loc></url></urlset>",
+      "final_url": "https://acmesitemap.example.com/sitemap.xml"
+    },
+    "https://acmesitemap.example.com/openings": {
+      "status": 200,
+      "body": "<html><head><title>Openings</title></head><body><a href=\"/openings/widget-1\">Widget Maker</a><a href=\"/openings/widget-2\">Widget Polisher</a><a href=\"/openings/widget-3\">Widget Planner</a></body></html>",
+      "final_url": "https://acmesitemap.example.com/openings"
+    }
+  },
+  "heads": {}
+}

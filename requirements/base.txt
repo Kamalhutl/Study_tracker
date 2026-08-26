@@ -10,4 +10,4 @@ celery>=5.4,<6
 sentry-sdk>=2.0,<3
 gunicorn>=23.0,<24
 
-# scrapling[fetchers] — added in PROMPT 4 (apps/scraping)
+scrapling[fetchers]==0.4.14

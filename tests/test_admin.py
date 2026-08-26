@@ -1,9 +1,10 @@
 """Admin portal tests — add flows, actions, dashboard, query budgets."""
 
 import re
+from unittest import mock
 
 import pytest
-from django.test import Client
+from django.test import Client, TestCase
 
 from apps.companies.models import Company
 from tests.factories import (
@@ -108,6 +109,49 @@ class TestCandidateActions:
         assert "Refused" in response.content.decode()
         company.refresh_from_db()
         assert company.is_verified is False
+
+
+class TestDetectionAction:
+    def test_run_detection_now_enqueues_per_company(self, client):
+        """§6.7: the action enqueues tasks; ineligible companies are named."""
+        eligible = CompanyFactory(case_a=True, slug="act-detect-a")
+        CompanyFactory(case_a=True, slug="act-detect-b", is_deleted=True)
+        with (
+            mock.patch("apps.career_detection.tasks.detect_career_url.delay") as delay,
+            TestCase.captureOnCommitCallbacks(execute=True) as callbacks,
+        ):
+            response = client.post(
+                "/admin/companies/company/",
+                {
+                    "action": "run_detection_now_selected",
+                    "_selected_action": [str(eligible.pk)],
+                },
+                follow=True,
+            )
+        assert response.status_code == 200
+        body = response.content.decode()
+        assert delay.call_count == 1
+        delay.assert_called_once_with(str(eligible.pk))
+        assert len(callbacks) == 1
+        assert "Skipped" in body
+
+    def test_run_detection_now_skips_verified(self, client):
+        verified = CompanyFactory(slug="act-detect-verified")
+        with (
+            mock.patch("apps.career_detection.tasks.detect_career_url.delay") as delay,
+            TestCase.captureOnCommitCallbacks(execute=True),
+        ):
+            response = client.post(
+                "/admin/companies/company/",
+                {
+                    "action": "run_detection_now_selected",
+                    "_selected_action": [str(verified.pk)],
+                },
+                follow=True,
+            )
+        assert response.status_code == 200
+        delay.assert_not_called()
+        assert "Skipped" in response.content.decode()
 
 
 class TestJobAdmin:

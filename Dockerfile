@@ -23,6 +23,10 @@ RUN pip install --no-cache-dir -r requirements/dev.txt
 
 COPY . /app
 
+# ---- worker image (browser fetchers; web must NOT carry browsers) ------------
+FROM dev AS worker
+RUN scrapling install
+
 # ---- prod image -------------------------------------------------------------
 FROM base AS prod
 COPY . /app

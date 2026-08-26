@@ -1,0 +1,16 @@
+{
+  "domain": "acme-short.example.com",
+  "robots": null,
+  "responses": {
+    "https://acme-short.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme Short</title></head><body><header><a href=\"https://boards.greenhouse.io/acme/jobs\">Join the team</a></header><main><p>Short-circuits ATS detection.</p></main></body></html>"
+    },
+    "https://boards.greenhouse.io/acme/jobs": {
+      "status": 200,
+      "body_file": "board.html",
+      "final_url": "https://boards.greenhouse.io/acme/jobs"
+    }
+  },
+  "heads": {}
+}

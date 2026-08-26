@@ -1,0 +1,19 @@
+{
+  "domain": "acmerobots.example.com",
+  "robots": {
+    "status": 200,
+    "body": "User-agent: *\nAllow: /careers\nDisallow: /private\n"
+  },
+  "responses": {
+    "https://acmerobots.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme Robots</title></head><body><main><p>We make industrial arms.</p></main></body></html>"
+    },
+    "https://acmerobots.example.com/careers": {
+      "status": 200,
+      "body_file": "careers.html",
+      "final_url": "https://acmerobots.example.com/careers"
+    }
+  },
+  "heads": {}
+}

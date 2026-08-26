@@ -184,7 +184,13 @@ def add_company_from_main_website(
             after=snapshot(company),
             source="ADMIN",
         )
-    # PROMPT 3: enqueue detect_career_url.delay(str(company.id)) here
+
+    def _enqueue_detection() -> None:
+        from apps.career_detection.tasks import detect_career_url
+
+        detect_career_url.delay(str(company.id))
+
+    transaction.on_commit(_enqueue_detection)
     return company
 
 
@@ -464,7 +470,13 @@ def request_redetection(*, company: Company, actor: Any) -> Company:
             after=snapshot(company, ["detection_status"]),
             source="ADMIN",
         )
-    # PROMPT 3: enqueue detect_career_url.delay(str(company.id)) here
+
+    def _enqueue_detection() -> None:
+        from apps.career_detection.tasks import detect_career_url
+
+        detect_career_url.delay(str(company.id))
+
+    transaction.on_commit(_enqueue_detection)
     return company
 
 

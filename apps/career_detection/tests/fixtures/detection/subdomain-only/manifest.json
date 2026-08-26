@@ -1,0 +1,18 @@
+{
+  "domain": "acmesub.example.com",
+  "robots": null,
+  "responses": {
+    "https://acmesub.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme Sub</title></head><body><main><p>Career page lives on a subdomain.</p></main></body></html>"
+    },
+    "https://careers.acmesub.example.com/": {
+      "status": 200,
+      "body_file": "careers.html",
+      "final_url": "https://careers.acmesub.example.com/"
+    }
+  },
+  "heads": {
+    "https://careers.acmesub.example.com/": 206
+  }
+}

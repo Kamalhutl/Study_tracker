@@ -20,6 +20,11 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 
+# Fetching wrapper: browsers off by default (tests opt in via fixture), and the
+# adaptive-selector storage lives under a throwaway tmp dir.
+FETCH_ALLOW_DYNAMIC = False
+FETCH_ADAPTIVE_STORAGE_DIR = "/tmp/studytracker-scrapling-test"  # type: ignore[assignment]
+
 # Raise loudly on broken settings.
 SILENCED_SYSTEM_CHECKS: list[str] = []
 

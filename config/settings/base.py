@@ -42,6 +42,8 @@ LOCAL_APPS = [
     "apps.audit_logs",
     "apps.companies",
     "apps.jobs",
+    "apps.scraping",
+    "apps.career_detection",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -219,10 +221,61 @@ CELERY_QUEUES = (
 )
 CELERY_TASK_ROUTES = {
     "apps.scraping.*": {"queue": "scraping"},
+    "apps.career_detection.*": {"queue": "scraping"},
     "apps.notifications.*": {"queue": "notifications"},
 }
 # STEP 12: 5-hour scrape cycle goes here
 CELERY_BEAT_SCHEDULE: dict = {}
+
+# ---------------------------------------------------------------------------
+# Fetching (Scrapling wrapper)
+# ---------------------------------------------------------------------------
+FETCH_USER_AGENT = env(
+    "FETCH_USER_AGENT", default="StudyTrackerBot/1.0 (+https://<your-domain>/bot)"
+)
+FETCH_TIMEOUT_SECONDS = 10
+FETCH_MAX_REDIRECTS = 5
+FETCH_MAX_RESPONSE_BYTES = 3 * 1024 * 1024
+FETCH_ROBOTS_OBEY = True
+FETCH_ROBOTS_CACHE_SECONDS = 3600
+FETCH_PER_DOMAIN_RATE = 10  # requests per minute per domain
+FETCH_PER_DOMAIN_JITTER_MS = (200, 900)
+FETCH_ADAPTIVE_STORAGE_DIR = env(
+    "FETCH_ADAPTIVE_STORAGE_DIR", default=str(BASE_DIR / "var" / "scrapling")
+)
+FETCH_ALLOW_DYNAMIC = True
+FETCH_ALLOW_STEALTHY = False  # not used in detection; Prompt 4 flips this
+FETCH_PROXY = env("FETCH_PROXY", default="")  # optional http://user:pass@host:port
+FETCH_SMOKE_URLS: list[str] = []  # `manage.py run_smoke` targets; empty = offline skip
+
+# ---------------------------------------------------------------------------
+# Career detection
+# ---------------------------------------------------------------------------
+DETECTION_MAX_URL_CHECKS = 25
+DETECTION_TOTAL_BUDGET_SECONDS = 120
+DETECTION_MAX_CANDIDATES = 10
+DETECTION_MIN_CANDIDATE_SCORE = 20
+DETECTION_SAMPLE_TITLE_LIMIT = 5
+DETECTION_ATS_SHORTCIRCUIT_SCORE = 60
+DETECTION_COMMON_SUBDOMAINS = ["careers", "career", "jobs", "job", "work", "hiring"]
+DETECTION_COMMON_PATHS = [
+    "/careers",
+    "/careers/",
+    "/career",
+    "/jobs",
+    "/jobs/",
+    "/job",
+    "/about/careers",
+    "/company/careers",
+    "/en/careers",
+    "/work-with-us",
+    "/join-us",
+    "/join-our-team",
+    "/opportunities",
+    "/hiring",
+    "/openings",
+    "/vacancies",
+]
 
 # ---------------------------------------------------------------------------
 # Logging (JSON to stdout, request_id on every record)

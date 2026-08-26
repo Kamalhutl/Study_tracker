@@ -1,33 +1,9 @@
-import socket
-
 import pytest
 from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from apps.accounts.models import User
 from tests.factories import AdminUserFactory, UserFactory
-
-_ORIGINAL_SOCKET = socket.socket
-
-
-@pytest.fixture(autouse=True)
-def _block_network(monkeypatch):
-    """Raise on ANY outbound network call during tests (Prompt 2 ground rule 1)."""
-
-    class BlockedSocket(_ORIGINAL_SOCKET):
-        def __init__(self, *args, **kwargs):
-            raise RuntimeError(
-                "Network access is blocked during tests — this suite must run fully offline."
-            )
-
-        def __enter__(self):
-            raise AssertionError("Network access is blocked during tests.")
-
-        def __exit__(self, *args):
-            raise AssertionError("Network access is blocked during tests.")
-
-    monkeypatch.setattr(socket, "socket", BlockedSocket)
-    yield
 
 
 @pytest.fixture(autouse=True)

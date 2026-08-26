@@ -28,7 +28,16 @@ media/
 # OS
 .DS_Store
 
+# Defensive ignores for stray Scrapling checkouts (must live at ~/ref, outside the repo)
+Scrapling-main/
+scrapling-src/
+.scrapling_cache/
+
+# Local runtime state: adaptive-selector storage, logs (docker-compose mounts named vols here)
+var/
+
 # IDE
 .idea/
 .vscode/
-*.swp
+*.swp.env
+.env

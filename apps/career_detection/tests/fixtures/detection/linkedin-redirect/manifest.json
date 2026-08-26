@@ -1,0 +1,18 @@
+{
+  "domain": "acmeredir.example.com",
+  "robots": null,
+  "responses": {
+    "https://acmeredir.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme Redirect</title></head><body><main><p>A quiet corporate homepage.</p></main></body></html>"
+    },
+    "https://acmeredir.example.com/careers": {
+      "status": 200,
+      "body": "<html><head><title>Acme jobs on LinkedIn</title></head><body><main><a href=\"/jobs\">See openings</a><a href=\"/jobs/2\">More openings</a><a href=\"/jobs/3\">Even more</a></main></body></html>",
+      "final_url": "https://www.linkedin.com/company/acme/jobs"
+    }
+  },
+  "heads": {
+    "https://acmeredir.example.com/careers": 200
+  }
+}

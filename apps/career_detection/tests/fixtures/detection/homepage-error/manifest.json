@@ -1,0 +1,11 @@
+{
+  "domain": "acmeerror.example.com",
+  "robots": null,
+  "responses": {
+    "https://acmeerror.example.com/": {
+      "status": 500,
+      "body": "<html><head><title>boom</title></head><body>Server Error</body></html>"
+    }
+  },
+  "heads": {}
+}

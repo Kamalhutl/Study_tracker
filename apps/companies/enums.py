@@ -23,7 +23,12 @@ class CareerSourceType(models.TextChoices):
 
 
 class DetectionStatus(models.TextChoices):
-    """Where a company sits in the career-URL detection pipeline."""
+    """Where a company sits in the career-URL detection pipeline.
+
+    Shared by ``Company.detection_status`` and ``DetectionRun.status`` (run-only
+    values are SUCCESS/PARTIAL; company-only values are CANDIDATES_FOUND /
+    NO_CANDIDATES).
+    """
 
     PENDING = "pending"
     RUNNING = "running"
@@ -33,6 +38,10 @@ class DetectionStatus(models.TextChoices):
     MANUAL = "manual"
     SKIPPED = "skipped"
     FAILED = "failed"
+    CANDIDATES_FOUND = "candidates_found"
+    NO_CANDIDATES = "no_candidates"
+    SUCCESS = "success"
+    PARTIAL = "partial"
 
 
 class ScrapeHealth(models.TextChoices):

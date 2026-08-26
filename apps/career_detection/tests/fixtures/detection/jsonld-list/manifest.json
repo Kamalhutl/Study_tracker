@@ -1,0 +1,18 @@
+{
+  "domain": "acmejsonld.example.com",
+  "robots": null,
+  "responses": {
+    "https://acmejsonld.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme JSON-LD</title></head><body><header><a href=\"/company/careers\">Careers</a></header><main><p>Find our open roles.</p></main></body></html>"
+    },
+    "https://acmejsonld.example.com/company/careers": {
+      "status": 200,
+      "body_file": "careers.html",
+      "final_url": "https://acmejsonld.example.com/company/careers"
+    }
+  },
+  "heads": {
+    "https://acmejsonld.example.com/company/careers": 206
+  }
+}

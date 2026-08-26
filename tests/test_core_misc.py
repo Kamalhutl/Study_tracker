@@ -32,6 +32,7 @@ def test_celery_declared_queues():
     assert names == {"default", "scraping", "notifications"}
     assert settings.CELERY_TASK_ROUTES == {
         "apps.scraping.*": {"queue": "scraping"},
+        "apps.career_detection.*": {"queue": "scraping"},
         "apps.notifications.*": {"queue": "notifications"},
     }
 

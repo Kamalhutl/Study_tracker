@@ -16,3 +16,5 @@ docs
 Makefile
 .pre-commit-config.yaml
 tests
+Scrapling-main
+scrapling-src

@@ -9,6 +9,7 @@ from typing import Any, cast
 
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import QuerySet
 from django.forms import CharField, Form, IntegerField, Textarea, URLField
 from django.http import HttpRequest, HttpResponse
@@ -282,6 +283,7 @@ class CompanyAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         "resume_selected",
         "archive_selected",
         "request_redetection_selected",
+        "run_detection_now_selected",
         "reset_failures_selected",
     )
 
@@ -445,7 +447,36 @@ class CompanyAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         )
 
     request_redetection_selected.short_description = "Request career-URL redetection"  # type: ignore[attr-defined]
-    # PROMPT 3: "Run detection now" action goes here
+
+    def run_detection_now_selected(self, request: HttpRequest, queryset: QuerySet[Any]) -> None:
+        """§6.7: enqueue one detect_career_url task per eligible company."""
+        from apps.career_detection.tasks import detect_career_url
+
+        skipped = 0
+        enqueued = 0
+        for company in queryset:
+            if company.is_deleted or (company.is_verified and bool(company.career_url)):
+                skipped += 1
+                self.message_user(
+                    request,
+                    f"Skipped {company.name}: already verified/archived.",
+                    messages.WARNING,
+                )
+                continue
+            company_id = str(company.pk)
+
+            def _enqueue(cid: str = company_id) -> None:
+                detect_career_url.delay(cid)
+
+            transaction.on_commit(_enqueue)
+            enqueued += 1
+        if enqueued:
+            self.message_user(
+                request, f"Queued detection for {enqueued} company(ies).", messages.SUCCESS
+            )
+
+    run_detection_now_selected.short_description = "Run detection now"  # type: ignore[attr-defined]
+
     # PROMPT 5: "Scrape now" action goes here
 
     def reset_failures_selected(self, request: HttpRequest, queryset: QuerySet[Any]) -> None:
@@ -628,9 +659,11 @@ class DetectionRunAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         "started_at",
         "duration_ms",
         "urls_checked",
+        "checks_used",
         "candidates_found",
+        "ats_short_circuit",
     )
-    list_filter = ("status",)
+    list_filter = ("status", "ats_short_circuit")
     list_select_related = ("company", "triggered_by")
     readonly_fields = (
         "company",
@@ -640,9 +673,12 @@ class DetectionRunAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         "finished_at",
         "duration_ms",
         "urls_checked",
+        "checks_used",
         "candidates_found",
+        "ats_short_circuit",
         "strategies_pretty",
         "error_message",
+        "notes",
         "log_pretty",
     )
     fieldsets = (
@@ -653,9 +689,12 @@ class DetectionRunAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
                 "fields": (
                     "duration_ms",
                     "urls_checked",
+                    "checks_used",
                     "candidates_found",
+                    "ats_short_circuit",
                     "strategies_pretty",
                     "error_message",
+                    "notes",
                 )
             },
         ),

@@ -1,0 +1,11 @@
+{
+  "domain": "acmelinked.example.com",
+  "robots": null,
+  "responses": {
+    "https://acmelinked.example.com/": {
+      "status": 200,
+      "body": "<html><head><title>Acme Linked</title></head><body><header><a href=\"https://www.linkedin.com/company/acme/jobs\">Careers</a></header><main><p>All hiring info lives on our LinkedIn page.</p></main></body></html>"
+    }
+  },
+  "heads": {}
+}
