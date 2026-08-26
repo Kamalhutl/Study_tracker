@@ -8,6 +8,7 @@ __pycache__/
 .mypy_cache/
 .coverage
 coverage.xml
+coverage.json
 htmlcov/
 
 # Virtualenv
@@ -39,5 +40,10 @@ var/
 # IDE
 .idea/
 .vscode/
-*.swp.env
-.env
+*.swp
+
+# Celery beat schedule
+celerybeat-schedule
+
+# Coverage artifacts
+*.zip
