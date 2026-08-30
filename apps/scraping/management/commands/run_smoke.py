@@ -18,6 +18,7 @@ from django.core.management.base import BaseCommand
 from apps.scraping import (
     FetchError,
     FetchResult,
+    ThrottleUnavailable,
     fetch,
     fetch_with_escalation,
     head_ok,
@@ -67,13 +68,23 @@ class Command(BaseCommand):
                 f"{block.user_agents or ['*']} | crawldelay={block.crawl_delay}s | "
                 f"allowed={allowed} ({matched or 'default'})"
             )
+        except ThrottleUnavailable as exc:
+            self.stdout.write(self.style.ERROR(f"  robots : THROTTLE_DOWN {exc}"))
+            failed += 1
         except Exception as exc:
             self.stdout.write(self.style.ERROR(f"  robots : FAIL {exc!r}"))
             failed += 1
 
         # 2. head probe (must not raise for ordinary HTTP failures)
-        ok, status = head_ok(url)
-        self.stdout.write(f"  head   : {'OK' if ok else 'MISS'} (status={status})")
+        try:
+            ok, status = head_ok(url)
+            self.stdout.write(f"  head   : {'OK' if ok else 'MISS'} (status={status})")
+        except ThrottleUnavailable as exc:
+            self.stdout.write(self.style.ERROR(f"  head   : THROTTLE_DOWN {exc}"))
+            failed += 1
+        except Exception as exc:
+            self.stdout.write(self.style.ERROR(f"  head   : FAIL {exc!r}"))
+            failed += 1
 
         # 3. full fetch (HTTP, then optional browser escalation)
         result: FetchResult
@@ -89,6 +100,9 @@ class Command(BaseCommand):
             self.stdout.write(f"  fetch  : {verdict}")
             if result.escalation_reason:
                 self.stdout.write(f"  detect : SPA-like ({result.escalation_reason})")
+        except ThrottleUnavailable as exc:
+            self.stdout.write(self.style.ERROR(f"  fetch  : THROTTLE_DOWN {exc}"))
+            failed += 1
         except FetchError as exc:
             self.stdout.write(self.style.ERROR(f"  fetch  : FAIL {exc}"))
             failed += 1

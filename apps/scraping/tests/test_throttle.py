@@ -5,7 +5,7 @@ from unittest.mock import patch
 from django.core.cache import cache
 from django.test import SimpleTestCase, override_settings
 
-from apps.scraping.exceptions import FetchBudgetExceeded
+from apps.scraping.exceptions import FetchBudgetExceeded, ThrottleUnavailable
 from apps.scraping.throttle import acquire_slot
 
 RATE = 3
@@ -74,6 +74,21 @@ class AcquireSlotTests(SimpleTestCase):
         acquire_slot(
             "b.example", rate_per_minute=RATE, timeout=1, _clock=self.clock, _sleep=self._sleep
         )
+
+    def test_throttle_unavailable_when_redis_down(self) -> None:
+        """Redis connection error is wrapped in ThrottleUnavailable, no traceback."""
+        with (
+            patch("django.core.cache.cache.add", side_effect=ConnectionError("redis down")),
+            self.assertRaises(ThrottleUnavailable) as cm,
+        ):
+            acquire_slot(
+                "down.example",
+                rate_per_minute=RATE,
+                _clock=self.clock,
+                _sleep=self._sleep,
+            )
+        self.assertEqual(cm.exception.code, "throttle_unavailable")
+        self.assertIn("rate-limiter backend unreachable", str(cm.exception))
 
 
 @override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}})

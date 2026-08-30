@@ -18,6 +18,7 @@ from .exceptions import (  # noqa: E402
     FetchServerError,
     FetchTimeout,
     FetchTooLarge,
+    ThrottleUnavailable,
 )
 from .fetching import (  # noqa: E402
     FetchMode,
@@ -49,6 +50,7 @@ __all__ = [
     "FetchServerError",
     "FetchTimeout",
     "FetchTooLarge",
+    "ThrottleUnavailable",
     "acquire_slot",
     "fetch",
     "fetch_for_sitemaps",

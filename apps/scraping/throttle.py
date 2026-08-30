@@ -21,7 +21,7 @@ from collections.abc import Callable
 from django.conf import settings
 from django.core.cache import cache
 
-from .exceptions import FetchBudgetExceeded
+from .exceptions import FetchBudgetExceeded, ThrottleUnavailable
 
 logger = logging.getLogger("study_tracker.scraping.throttle")
 
@@ -55,8 +55,8 @@ def acquire_slot(
     while True:
         window = int(_clock() // _WINDOW_SECONDS)
         counter_key = f"throttle:{domain}:{window}"
-        cache.add(counter_key, 0, timeout=_WINDOW_SECONDS * 2)
         try:
+            cache.add(counter_key, 0, timeout=_WINDOW_SECONDS * 2)
             count = cache.incr(counter_key)
         except ValueError:
             # LocMem edge: the key can be evicted between add and incr; retry.
@@ -67,6 +67,13 @@ def acquire_slot(
                 ) from None
             _sleep(_POLL_SECONDS)
             continue
+        except Exception as exc:
+            # Redis connection errors (and any other backend failure) bubble up as
+            # ThrottleUnavailable so callers can fail fast without a traceback.
+            raise ThrottleUnavailable(
+                "rate-limiter backend unreachable, refusing to fetch",
+                url=domain,
+            ) from exc
 
         if count <= rate_per_minute:
             if jitter_ms and jitter_ms[1] > 0:

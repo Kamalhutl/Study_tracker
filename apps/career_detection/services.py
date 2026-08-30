@@ -24,7 +24,7 @@ from apps.companies.enums import (
 )
 from apps.companies.exceptions import DetectionNotApplicable
 from apps.companies.models import CareerCandidateUrl, Company, DetectionRun
-from apps.scraping.exceptions import FetchBudgetExceeded
+from apps.scraping.exceptions import FetchBudgetExceeded, ThrottleUnavailable
 from core.locks import LockNotAcquired, redis_lock
 
 from .scoring import score_candidate
@@ -186,6 +186,25 @@ def _run_detection_phased(
             run_status=DetectionStatus.PARTIAL,
         )
         results["status"] = DetectionStatus.PARTIAL
+    except ThrottleUnavailable as exc:
+        # Throttle backend down — fail cleanly without traceback, save reason, release lock.
+        logger.warning("Detection throttle unavailable for company %s: %s", company.pk, exc)
+        results["status"] = DetectionStatus.FAILED
+        results["notes"] = [*list(ctx.notes), f"throttle unavailable: {exc}"]
+        if run is not None and not dry_run:
+            with transaction.atomic():
+                company = Company.objects.filter(pk=company.pk).first()
+                if company is not None:
+                    company.detection_status = DetectionStatus.FAILED
+                    company.save(update_fields=["detection_status"])
+
+                run.status = DetectionStatus.FAILED
+                run.finished_at = timezone.now()
+                run.error_message = str(exc)
+                run.notes = "\n".join([*ctx.notes, f"throttle unavailable: {exc}"])[:2000]
+                run.save(update_fields=["status", "finished_at", "error_message", "notes"])
+        if dry_run:
+            raise
     except Exception as exc:
         logger.exception("Detection failed for company %s", company)
         results["status"] = DetectionStatus.FAILED
@@ -203,12 +222,6 @@ def _run_detection_phased(
                 run.error_message = str(exc)
                 run.notes = "\n".join([*ctx.notes, str(exc)])[:2000]
                 run.save(update_fields=["status", "finished_at", "error_message", "notes"])
-        elif run is None and not dry_run:
-            # run was None but not dry_run - shouldn't happen, but guard
-            company = Company.objects.filter(pk=company.pk).first()
-            if company is not None:
-                company.detection_status = DetectionStatus.FAILED
-                company.save(update_fields=["detection_status"])
         if dry_run:
             raise
 

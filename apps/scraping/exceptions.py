@@ -66,3 +66,9 @@ class FetchBudgetExceeded(FetchError):
     """Throttle deadline or total-run budget exceeded."""
 
     code = "fetch_budget_exceeded"
+
+
+class ThrottleUnavailable(FetchError):
+    """Rate-limiter backend unreachable; refusing to fetch without a working throttle."""
+
+    code = "throttle_unavailable"

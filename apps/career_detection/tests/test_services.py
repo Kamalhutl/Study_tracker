@@ -562,27 +562,6 @@ class TestRunDetectionLockAndRaces:
         assert run.status == DetectionStatus.FAILED
         assert "boom" in run.error_message
 
-    def test_exception_handler_updates_company_when_run_none_not_dry_run(
-        self, company, monkeypatch
-    ):
-        """Unexpected exception updates company when run is None but not dry_run (edge case)."""
-        activate_scenario(monkeypatch, "nav-header-footer")
-
-        # Patch _start_run to return None (simulating dry_run behavior but without dry_run=True)
-        with (
-            mock.patch("apps.career_detection.services._start_run", return_value=None),
-            mock.patch(
-                "apps.career_detection.services.get_strategies", side_effect=RuntimeError("boom")
-            ),
-        ):
-            result = run_detection(company, dry_run=False)
-
-        assert result["status"] == DetectionStatus.FAILED
-        company.refresh_from_db()
-        assert company.detection_status == DetectionStatus.FAILED
-        # No DetectionRun should exist
-        assert DetectionRun.objects.filter(company=company).count() == 0
-
     def test_redis_lock_released_on_strategy_exception(self, company, monkeypatch):
         """Redis lock is released even when a strategy raises an exception."""
         activate_scenario(monkeypatch, "nav-header-footer")
