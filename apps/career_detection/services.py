@@ -196,7 +196,15 @@ def _run_detection_phased(
                 company = Company.objects.filter(pk=company.pk).first()
                 if company is not None:
                     company.detection_status = DetectionStatus.FAILED
-                    company.save(update_fields=["detection_status"])
+                    company.detection_attempts = company.detection_attempts + 1
+                    company.last_detection_at = timezone.now()
+                    company.save(
+                        update_fields=[
+                            "detection_status",
+                            "detection_attempts",
+                            "last_detection_at",
+                        ]
+                    )
 
                 run.status = DetectionStatus.FAILED
                 run.finished_at = timezone.now()

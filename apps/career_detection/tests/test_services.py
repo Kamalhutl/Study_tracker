@@ -509,6 +509,181 @@ class TestMarkers:
         delay.assert_not_called()
 
 
+class TestThrottleHandler:
+    """Tests for ThrottleUnavailable exception handling in run_detection."""
+
+    def test_throttle_unavailable_fails_company_and_run(self, company, monkeypatch):
+        """ThrottleUnavailable during detection marks company and run as failed."""
+        # Don't use fetch fixtures - we need the real fetch to call throttle
+        from apps.scraping.exceptions import ThrottleUnavailable
+
+        # Mock fetch to raise ThrottleUnavailable on first call
+        def mock_fetch(url, **kwargs):
+            raise ThrottleUnavailable(
+                "rate-limiter backend unreachable, refusing to fetch", url=url
+            )
+
+        monkeypatch.setattr("apps.career_detection.strategies.fetch", mock_fetch)
+
+        with mock.patch(
+            "apps.scraping.throttle.acquire_slot",
+            side_effect=ThrottleUnavailable(
+                "rate-limiter backend unreachable, refusing to fetch", url="test.example"
+            ),
+        ):
+            result = run_detection(company)
+
+        # Should fail cleanly without traceback
+        assert result["status"] == DetectionStatus.FAILED
+        assert any("throttle unavailable" in note for note in result["notes"])
+
+        # Company should be marked as failed
+        company.refresh_from_db()
+        assert company.detection_status == DetectionStatus.FAILED
+        assert company.detection_attempts == 1
+
+        # Run should be marked as failed with error message
+        run_row = DetectionRun.objects.get(company=company)
+        assert run_row.status == DetectionStatus.FAILED
+        assert run_row.error_message == "rate-limiter backend unreachable, refusing to fetch"
+        assert "throttle unavailable" in run_row.notes
+        assert run_row.finished_at is not None
+
+    def test_throttle_unavailable_dry_run_reraises(self, company, monkeypatch):
+        """ThrottleUnavailable during dry_run re-raises the exception."""
+        from apps.scraping.exceptions import ThrottleUnavailable
+
+        # Mock fetch to raise ThrottleUnavailable
+        def mock_fetch(url, **kwargs):
+            raise ThrottleUnavailable(
+                "rate-limiter backend unreachable, refusing to fetch", url=url
+            )
+
+        monkeypatch.setattr("apps.career_detection.strategies.fetch", mock_fetch)
+
+        with mock.patch(
+            "apps.scraping.throttle.acquire_slot",
+            side_effect=ThrottleUnavailable(
+                "rate-limiter backend unreachable, refusing to fetch", url="test.example"
+            ),
+        ):
+            with pytest.raises(ThrottleUnavailable) as exc_info:
+                run_detection(company, dry_run=True)
+
+        assert "rate-limiter backend unreachable" in str(exc_info.value)
+
+        # No persistence should happen in dry_run
+        company.refresh_from_db()
+        assert company.detection_attempts == 0
+        assert not DetectionRun.objects.filter(company=company).exists()
+
+    def test_throttle_unavailable_with_deleted_company(self, company, monkeypatch):
+        """ThrottleUnavailable when company is deleted mid-run still updates run."""
+        from apps.scraping.exceptions import ThrottleUnavailable
+
+        # Mock fetch to raise ThrottleUnavailable
+        def mock_fetch(url, **kwargs):
+            raise ThrottleUnavailable(
+                "rate-limiter backend unreachable, refusing to fetch", url=url
+            )
+
+        monkeypatch.setattr("apps.career_detection.strategies.fetch", mock_fetch)
+
+        # Mock Company.objects.filter to return None only in the exception handler
+        # (simulating company deleted between detection start and exception)
+        original_filter = Company.objects.filter
+        call_count = [0]
+
+        def mock_filter(*args, **kwargs):
+            call_count[0] += 1
+            # First call is in _run_detection_phased (phase 2), return company
+            # Second call is in exception handler, return None
+            if call_count[0] == 1:
+                return original_filter(*args, **kwargs)
+            else:
+                # Mock a queryset that returns None
+                mock_queryset = mock.MagicMock()
+                mock_queryset.first.return_value = None
+                return mock_queryset
+
+        with mock.patch(
+            "apps.career_detection.services.Company.objects.filter", side_effect=mock_filter
+        ):
+            with mock.patch(
+                "apps.scraping.throttle.acquire_slot",
+                side_effect=ThrottleUnavailable(
+                    "rate-limiter backend unreachable, refusing to fetch", url="test.example"
+                ),
+            ):
+                result = run_detection(company)
+
+        # Should fail cleanly even though company is gone
+        assert result["status"] == DetectionStatus.FAILED
+        assert any("throttle unavailable" in note for note in result["notes"])
+
+        # Run should still be updated even though company is gone
+        run_row = DetectionRun.objects.get(company=company)
+        assert run_row.status == DetectionStatus.FAILED
+        assert run_row.error_message == "rate-limiter backend unreachable, refusing to fetch"
+        assert "throttle unavailable" in run_row.notes
+        assert run_row.finished_at is not None
+
+    def test_general_exception_with_deleted_company(self, company, monkeypatch):
+        """General exception when company is deleted mid-run still updates run."""
+        activate_scenario(monkeypatch, "nav-header-footer")
+
+        # Mock Company.objects.filter to return None only in the exception handler
+        original_filter = Company.objects.filter
+        call_count = [0]
+
+        def mock_filter(*args, **kwargs):
+            call_count[0] += 1
+            # First call is in _run_detection_phased (phase 2), return company
+            # Second call is in exception handler, return None
+            if call_count[0] == 1:
+                return original_filter(*args, **kwargs)
+            else:
+                # Mock a queryset that returns None
+                mock_queryset = mock.MagicMock()
+                mock_queryset.first.return_value = None
+                return mock_queryset
+
+        with mock.patch(
+            "apps.career_detection.services.Company.objects.filter", side_effect=mock_filter
+        ):
+            with mock.patch(
+                "apps.career_detection.services.get_strategies",
+                side_effect=RuntimeError("Unexpected error"),
+            ):
+                result = run_detection(company)
+
+        # Should fail cleanly even though company is gone
+        assert result["status"] == DetectionStatus.FAILED
+        assert any("Unexpected error" in note for note in result["notes"])
+
+        # Run should still be updated even though company is gone
+        run_row = DetectionRun.objects.get(company=company)
+        assert run_row.status == DetectionStatus.FAILED
+        assert run_row.error_message == "Unexpected error"
+        assert "Unexpected error" in run_row.notes
+        assert run_row.finished_at is not None
+
+
+class TestNetworkGuard:
+    """Tests for the network guard in conftest.py."""
+
+    def test_network_guard_blocks_playwright(self):
+        """Playwright-based fetchers are blocked during tests."""
+        from apps.scraping.fetching import _dynamic_get, _stealth_get
+
+        # Both should raise RuntimeError
+        with pytest.raises(RuntimeError, match="Network access is blocked"):
+            _dynamic_get("https://example.com")
+
+        with pytest.raises(RuntimeError, match="Network access is blocked"):
+            _stealth_get("https://example.com")
+
+
 class TestRunDetectionLockAndRaces:
     """Tests for Redis lock and mid-run race conditions in run_detection."""
 

@@ -75,10 +75,14 @@ class _BlockedCurlSession:
 
 # Patch scrapling's CurlSession at module level BEFORE any test imports scrapling.
 # This must happen before apps.scraping.fetching is imported (which imports scrapling).
+# Assert the attribute exists first so an upgrade fails loudly if Scrapling renames it.
+import scrapling.engines.static
+assert hasattr(scrapling.engines.static, "CurlSession"), "scrapling.engines.static.CurlSession not found - Scrapling upgrade may have renamed it"
 _patch_scrapling = patch("scrapling.engines.static.CurlSession", _BlockedCurlSession)
 _patch_scrapling.start()
 
 # Also patch AsyncSession for dynamic/stealthy fetchers
+assert hasattr(scrapling.engines.static, "AsyncCurlSession"), "scrapling.engines.static.AsyncCurlSession not found - Scrapling upgrade may have renamed it"
 _patch_async = patch("scrapling.engines.static.AsyncCurlSession", _BlockedCurlSession)
 _patch_async.start()
 
@@ -100,6 +104,17 @@ def _block_network(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
             raise AssertionError("Network access is blocked during tests.")
 
     monkeypatch.setattr(socket, "socket", BlockedSocket)
+    
+    # Block Playwright-based fetchers (DynamicFetcher/StealthyFetcher) which launch
+    # a subprocess and are not caught by the socket or curl patches.
+    def blocked_playwright(*args: Any, **kwargs: Any) -> Any:
+        raise RuntimeError(
+            "Network access is blocked during tests — this suite must run fully offline."
+        )
+    
+    monkeypatch.setattr("apps.scraping.fetching._dynamic_get", blocked_playwright)
+    monkeypatch.setattr("apps.scraping.fetching._stealth_get", blocked_playwright)
+    
     yield
 
 

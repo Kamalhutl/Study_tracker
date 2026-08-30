@@ -1,19 +1,20 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
-    "zai": {
+    "xkiro": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "Z.AI",
+      "name": "xKiro",
       "options": {
-        "baseURL": "https://api.z.ai/api/coding/paas/v4",
-        "apiKey": "{env:ZAI_API_KEY}"
+        "baseURL": "https://api.xkiro.com/v1",
+        "apiKey": "{env:XKIRO_API_KEY}"
       },
       "models": {
-        "glm-5.1": {
-          "name": "GLM-5.1"
-        }
+        "qwen/qwen3-coder-plus:free": { "name": "Qwen3 Coder Plus (free)" },
+        "qwen/qwen3.8-max:free": { "name": "Qwen3.8 Max (free)" },
+        "deepseek/deepseek-v3.2": { "name": "DeepSeek V3.2 (free)" },
+        "mistralai/devstral-medium": { "name": "Devstral 2 (free)" }
       }
     }
-  },
-  "model": "zai/glm-5.1"
+  }
 }
+

@@ -20,7 +20,12 @@ from apps.companies.enums import CareerSourceType
 from apps.companies.services import _is_blocked, sniff_source_type_from_url
 from apps.scraping import FetchMode, fetch, fetch_with_escalation, head_ok
 from apps.scraping import robots as robots_mod
-from apps.scraping.exceptions import FetchBudgetExceeded, FetchDomainBlocked, FetchError
+from apps.scraping.exceptions import (
+    FetchBudgetExceeded,
+    FetchDomainBlocked,
+    FetchError,
+    ThrottleUnavailable,
+)
 from core.utils import normalize_url
 
 from . import extract
@@ -113,6 +118,8 @@ class AtsPatternStrategy:
         try:
             result = fetch(ctx.root_url, mode=FetchMode.HTTP)
         except FetchBudgetExceeded:
+            raise
+        except ThrottleUnavailable:
             raise
         except (FetchDomainBlocked, FetchError) as exc:
             ctx.homepage_error = str(exc)
