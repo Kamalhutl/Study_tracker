@@ -561,14 +561,16 @@ class TestThrottleHandler:
 
         monkeypatch.setattr("apps.career_detection.strategies.fetch", mock_fetch)
 
-        with mock.patch(
-            "apps.scraping.throttle.acquire_slot",
-            side_effect=ThrottleUnavailable(
-                "rate-limiter backend unreachable, refusing to fetch", url="test.example"
+        with (
+            mock.patch(
+                "apps.scraping.throttle.acquire_slot",
+                side_effect=ThrottleUnavailable(
+                    "rate-limiter backend unreachable, refusing to fetch", url="test.example"
+                ),
             ),
+            pytest.raises(ThrottleUnavailable) as exc_info,
         ):
-            with pytest.raises(ThrottleUnavailable) as exc_info:
-                run_detection(company, dry_run=True)
+            run_detection(company, dry_run=True)
 
         assert "rate-limiter backend unreachable" in str(exc_info.value)
 
@@ -606,16 +608,18 @@ class TestThrottleHandler:
                 mock_queryset.first.return_value = None
                 return mock_queryset
 
-        with mock.patch(
-            "apps.career_detection.services.Company.objects.filter", side_effect=mock_filter
-        ):
-            with mock.patch(
+        with (
+            mock.patch(
+                "apps.career_detection.services.Company.objects.filter", side_effect=mock_filter
+            ),
+            mock.patch(
                 "apps.scraping.throttle.acquire_slot",
                 side_effect=ThrottleUnavailable(
                     "rate-limiter backend unreachable, refusing to fetch", url="test.example"
                 ),
-            ):
-                result = run_detection(company)
+            ),
+        ):
+            result = run_detection(company)
 
         # Should fail cleanly even though company is gone
         assert result["status"] == DetectionStatus.FAILED
@@ -648,14 +652,16 @@ class TestThrottleHandler:
                 mock_queryset.first.return_value = None
                 return mock_queryset
 
-        with mock.patch(
-            "apps.career_detection.services.Company.objects.filter", side_effect=mock_filter
-        ):
-            with mock.patch(
+        with (
+            mock.patch(
+                "apps.career_detection.services.Company.objects.filter", side_effect=mock_filter
+            ),
+            mock.patch(
                 "apps.career_detection.services.get_strategies",
                 side_effect=RuntimeError("Unexpected error"),
-            ):
-                result = run_detection(company)
+            ),
+        ):
+            result = run_detection(company)
 
         # Should fail cleanly even though company is gone
         assert result["status"] == DetectionStatus.FAILED
