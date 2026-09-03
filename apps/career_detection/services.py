@@ -27,6 +27,7 @@ from apps.companies.models import CareerCandidateUrl, Company, DetectionRun
 from apps.scraping.exceptions import FetchBudgetExceeded, ThrottleUnavailable
 from core.locks import LockNotAcquired, redis_lock
 
+from . import extract
 from .scoring import score_candidate
 from .strategies import _scoring_evidence, get_strategies
 from .types import DetectionContext, RawCandidate
@@ -365,22 +366,38 @@ def _start_run(company: Company, *, dry_run: bool) -> DetectionRun | None:
 
 def _execute(ctx: DetectionContext) -> None:
     strategies = get_strategies()
+    # Track if NavLinkStrategy found a career_path_keyword candidate
+    nav_found_career = False
     for strategy in strategies:
         if ctx.ats_short_circuit:
             # Skip strategies 3-7; only the Verify step (last) still runs.
             if strategy.name == "verify":
                 strategy.run(ctx)
             continue
+        # Skip CommonPathStrategy if NavLinkStrategy already produced a career_path_keyword candidate
+        if strategy.name == "common_path" and nav_found_career:
+            ctx.notes.append(
+                "common_path: skipped because NavLinkStrategy found career keyword candidate"
+            )
+            continue
         strategy.run(ctx)
         # After strategies 1-2 (free + ATS harvest), a confident ATS hit
         # short-circuits the expensive probing (6.5 step 5).
         if strategy.name == "nav_link":
             ctx.ats_short_circuit = _ats_hit_confirmed(ctx)
+            # Check if NavLinkStrategy added any candidate with career_path_keyword evidence
+            for cand in ctx.candidates.values():
+                if cand.origin in ("header_link", "footer_link") and cand.evidence.get(
+                    "career_path_keyword"
+                ):
+                    nav_found_career = True
+                    break
 
 
 def _ats_hit_confirmed(ctx: DetectionContext) -> bool:
-    """True when the top ATS candidate already clears the short-circuit score."""
+    """True when an ATS candidate is confirmed (body contains org token) or clears score."""
     threshold = settings.DETECTION_ATS_SHORTCIRCUIT_SCORE
+    org_slug = ctx.company.slug or extract.registrable_domain(ctx.domain).split(".", 1)[0]
     for candidate in ctx.candidates.values():
         if candidate.origin != "ats_pattern":
             continue
@@ -388,14 +405,29 @@ def _ats_hit_confirmed(ctx: DetectionContext) -> bool:
         score, _ = score_candidate(url=candidate.url, evidence=evidence)
         if score >= threshold:
             return True
+        # Check confirmation via body or URL token
+        ats_identifier = evidence.get("ats_identifier", "")
+        if ats_identifier and ats_identifier == org_slug:
+            return True
+        # Also check if the candidate URL contains the org slug as a segment
+        if org_slug and org_slug in candidate.url:
+            return True
     return False
 
 
 def _rank(
     ctx: DetectionContext,
 ) -> tuple[list[tuple[RawCandidate, int, list[dict[str, Any]]]], bool]:
-    """Sort candidates: score desc, strategy cost asc, URL length asc, URL asc."""
+    """Sort candidates: confirmed ATS first, then score desc, strategy cost asc, URL length asc, URL asc."""
     ranked: list[tuple[RawCandidate, int, list[dict[str, Any]]]] = []
+    # Determine which ATS candidates are confirmed (have ats_identifier matching org slug)
+    org_slug = ctx.company.slug or extract.registrable_domain(ctx.domain).split(".", 1)[0]
+    confirmed_ats_urls = set()
+    for candidate in ctx.candidates.values():
+        if candidate.origin == "ats_pattern":
+            ats_id = candidate.evidence.get("ats_identifier", "")
+            if (ats_id and ats_id == org_slug) or (org_slug and org_slug in candidate.url):
+                confirmed_ats_urls.add(candidate.url)
     for candidate in ctx.candidates.values():
         evidence = _scoring_evidence(ctx, candidate)
         score, trail = score_candidate(url=candidate.url, evidence=evidence)
@@ -404,14 +436,21 @@ def _rank(
 
     from .types import ORIGIN_COSTS
 
-    ranked.sort(
-        key=lambda pair: (
-            -pair[1],
-            ORIGIN_COSTS.get(pair[0].origin, 99),
-            len(pair[0].url),
-            pair[0].url,
+    def sort_key(
+        pair: tuple[RawCandidate, int, list[dict[str, Any]]]
+    ) -> tuple[bool, int, int, int, str]:
+        cand, score, _ = pair
+        # confirmed ATS first
+        is_confirmed_ats = cand.url in confirmed_ats_urls
+        return (
+            not is_confirmed_ats,  # True first (False < True)
+            -score,
+            ORIGIN_COSTS.get(cand.origin, 99),
+            len(cand.url),
+            cand.url,
         )
-    )
+
+    ranked.sort(key=sort_key)
     return ranked[: settings.DETECTION_MAX_CANDIDATES], ctx.ats_short_circuit
 
 

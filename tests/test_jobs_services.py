@@ -143,7 +143,7 @@ class TestReports:
         job = JobFactory()
         user = UserFactory()
         report = services.submit_job_report(
-            job=job, user=user, reason=ReportReason.SPAM, comment="bad"
+            job=job, user=user, reason=ReportReason.SPAM, detail="bad"
         )
         assert report.status == ReportStatus.OPEN
         job.refresh_from_db()
@@ -176,7 +176,7 @@ class TestReports:
         out = services.resolve_report(
             report=report, actor=UserFactory(), accept=True, note="confirmed"
         )
-        assert out.status == "accepted"
+        assert out.status == "resolved"
         job.refresh_from_db()
         assert job.status == JobStatus.CLOSED
         assert AuditLog.objects.filter(action="job.report.resolved").count() == 1
@@ -213,23 +213,52 @@ class TestSaveUnsave:
 
 
 class TestSearchAndTrust:
-    def test_search_vector_finds_job(self):
-        company = CompanyFactory(slug="search-co")
+    def test_search_contract(self):
+        from apps.jobs.filters import JobFilter
+
+        # Create a job that should match
+        company = CompanyFactory(slug="search-contract", name="AcmeCorp")
         job = JobFactory(
             company=company,
-            title="Django Platform Engineer",
-            description="Backend with Django and Postgres",
+            title="Rustacean",
+            description="This is only in description and should never match",
+            department="Engineering",
         )
-        services.refresh_search_vector(job=job)
-        results = Job.objects.search("django")
-        assert job.pk in {j.pk for j in results}
+        # Create a decoy job that should NOT match any of the positive queries
+        decoy_company = CompanyFactory(slug="search-contract-decoy", name="XYZCorp")
+        decoy = JobFactory(
+            company=decoy_company,
+            title="Qwerty",
+            description="Decoy description",
+            department="Nonexistent",
+        )
 
-    def test_company_bulk_refresh(self):
-        company = CompanyFactory(slug="bulk-search")
-        JobFactory(company=company, title="Go Engineer One")
-        JobFactory(company=company, title="Go Engineer Two")
-        services.refresh_search_vector(company=company)
-        assert Job.objects.search("Go").count() == 2
+        # Long queries (≥3 chars): trigram similarity on title, company name, department
+        # Title match
+        qs = JobFilter(data={"q": "Rust"}, queryset=Job.objects.all()).qs
+        assert job in qs
+        assert decoy not in qs
+        # Company name match
+        qs = JobFilter(data={"q": "Acme"}, queryset=Job.objects.all()).qs
+        assert job in qs
+        assert decoy not in qs
+        # Department match
+        qs = JobFilter(data={"q": "Engineering"}, queryset=Job.objects.all()).qs
+        assert job in qs
+        assert decoy not in qs
+        # Description-only term should NOT match (deliberate)
+        qs = JobFilter(data={"q": "description"}, queryset=Job.objects.all()).qs
+        assert job not in qs
+        assert decoy not in qs
+        # Short queries (<3 chars): icontains fallback on same fields
+        # Title short match
+        qs = JobFilter(data={"q": "Ru"}, queryset=Job.objects.all()).qs
+        assert job in qs
+        assert decoy not in qs
+        # Description short term should NOT match
+        qs = JobFilter(data={"q": "de"}, queryset=Job.objects.all()).qs
+        assert job not in qs
+        assert decoy not in qs
 
     def test_compute_trust_label_verified_ats(self):
         company = CompanyFactory(slug="trust-ats", ats=True)

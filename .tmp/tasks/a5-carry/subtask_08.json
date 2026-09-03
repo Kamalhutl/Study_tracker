@@ -1,0 +1,18 @@
+{
+  "id": "a5-carry-08",
+  "seq": "08",
+  "title": "Fix iteration guard in backfill_sanitized_html.py",
+  "status": "pending",
+  "depends_on": [],
+  "parallel": true,
+  "suggested_agent": "CoderAgent",
+  "context_files": [],
+  "reference_files": ["apps/jobs/management/commands/backfill_sanitized_html.py"],
+  "acceptance_criteria": [
+    "max_iterations computed using ceiling division (total // batch_size + (1 if total % batch_size else 0)).",
+    "Guard prevents infinite loop and ensures all items processed."
+  ],
+  "deliverables": [
+    "Updated backfill_sanitized_html.py"
+  ]
+}

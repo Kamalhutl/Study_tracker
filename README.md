@@ -37,7 +37,7 @@ docker compose up -d
 make migrate
 python manage.py seed_demo
 python manage.py runserver        # /admin/ — companies, candidate approval queue, job review queue
-make test                         # coverage >= 88%, 4 critical services at 100%
+make gates                        # lint, fmt, typecheck, migration checks, test coverage >= 88%
 ```
 
 ## Docs

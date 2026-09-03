@@ -69,4 +69,12 @@ companies-due:  ## List companies due for scraping
 rebuild-search-vectors:  ## Rebuild Job search vectors
 	python manage.py rebuild_search_vectors
 
-check: lint fmt typecheck test  ## Everything before a commit
+gates: lint fmt typecheck migrate-check test  ## Run all gates
+check: gates
+
+migrate-check:  ## Check unapplied migrations and missing migrations
+	python manage.py makemigrations --check --dry-run
+	python manage.py migrate --check
+
+test:  ## Run pytest with coverage
+	DJANGO_SETTINGS_MODULE=config.settings.test $(BIN)/pytest --cov --cov-fail-under=85

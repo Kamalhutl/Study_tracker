@@ -40,7 +40,7 @@ class ExperienceLevel(models.TextChoices):
 class ReportReason(models.TextChoices):
     EXPIRED = "expired"
     BROKEN_LINK = "broken_link"
-    WRONG_INFO = "wrong_info"
+    WRONG_DETAILS = "wrong_details"
     DUPLICATE = "duplicate"
     SPAM = "spam"
     OTHER = "other"
@@ -48,7 +48,8 @@ class ReportReason(models.TextChoices):
 
 class ReportStatus(models.TextChoices):
     OPEN = "open"
-    ACCEPTED = "accepted"
+    REVIEWING = "reviewing"
+    RESOLVED = "resolved"
     REJECTED = "rejected"
 
 

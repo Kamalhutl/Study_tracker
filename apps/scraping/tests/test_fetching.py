@@ -162,8 +162,9 @@ class FetchTests(SimpleTestCase):
             fetch("https://co.example/careers")
 
     def test_size_cap_enforced(self) -> None:
-        huge = FakeResponse("https://co.example/big", body=b"x" * (4 * 1024 * 1024))
+        huge = FakeResponse("https://co.example/big", body=b"x" * 2048)
         with (
+            override_settings(FETCH_MAX_RESPONSE_BYTES=1024),
             patch("apps.scraping.fetching._http_get", return_value=huge),
             self.assertRaises(FetchTooLarge),
         ):

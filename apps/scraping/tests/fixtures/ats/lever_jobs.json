@@ -1,0 +1,21 @@
+[
+  {
+    "id": "abc-def-123",
+    "text": "Backend Engineer",
+    "categories": {"location": "Remote", "department": "Engineering", "commitment": "Full-time"},
+    "descriptionPlain": "We are looking for a Backend Engineer to build scalable systems.",
+    "description": "<div>We are looking for a Backend Engineer to build scalable systems.</div>",
+    "hostedUrl": "https://jobs.lever.co/acme/abc-def-123",
+    "applyUrl": "https://jobs.lever.co/acme/abc-def-123/apply",
+    "createdAt": 1700000000000
+  },
+  {
+    "id": "ghi-jkl-456",
+    "text": "Frontend Developer",
+    "categories": {"location": "San Francisco, CA", "department": "Engineering", "commitment": "Full-time"},
+    "descriptionPlain": "Frontend Developer role for modern web applications.",
+    "description": "<div>Frontend Developer role for modern web applications.</div>",
+    "hostedUrl": "https://jobs.lever.co/acme/ghi-jkl-456",
+    "createdAt": 1700100000000
+  }
+]

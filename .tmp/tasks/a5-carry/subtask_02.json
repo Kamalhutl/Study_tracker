@@ -1,0 +1,24 @@
+{
+  "id": "a5-carry-02",
+  "seq": "02",
+  "title": "Create database trigger for search_vector and remove manual refresh calls",
+  "status": "pending",
+  "depends_on": [],
+  "parallel": false,
+  "suggested_agent": "CoderAgent",
+  "context_files": [],
+  "reference_files": [
+    "apps/jobs/models.py",
+    "apps/jobs/services.py"
+  ],
+  "acceptance_criteria": [
+    "PostgreSQL trigger created on jobs table that updates search_vector on INSERT/UPDATE of title, description, or company_id.",
+    "All manual calls to refresh_search_vector() removed from services.py (lines 268, 347, 585).",
+    "Models updated to not manually set search_vector.",
+    "Migration generated and applied."
+  ],
+  "deliverables": [
+    "Migration file for trigger",
+    "Updated services.py"
+  ]
+}

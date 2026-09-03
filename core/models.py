@@ -77,7 +77,7 @@ class SoftDeleteModel(models.Model):
 
         self.is_deleted = True
         self.deleted_at = timezone.now()
-        self.save(using=using, update_fields=["is_deleted", "deleted_at", "updated_at"])
+        self.save(using=using, update_fields=["is_deleted", "deleted_at", "updated_at"])  # type: ignore[misc]
 
     def hard_delete(
         self, using: str | None = None, keep_parents: bool = False

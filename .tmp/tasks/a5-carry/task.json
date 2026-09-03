@@ -1,0 +1,30 @@
+{
+  "id": "a5-carry",
+  "name": "A5-CARRY: Five carry-over items",
+  "status": "active",
+  "objective": "Replace search_vector maintenance with trigger, drop column, pin toolchain, remove bleach, fix iteration guard, run gates.",
+  "context_files": [],
+  "reference_files": [
+    "apps/jobs/models.py",
+    "apps/jobs/services.py",
+    "apps/jobs/filters.py",
+    "apps/jobs/admin.py",
+    "apps/jobs/management/commands/backfill_sanitized_html.py",
+    "requirements/",
+    "docs/api_v1_jobs.md"
+  ],
+  "exit_criteria": [
+    "Null row identified and documented.",
+    "search_vector maintenance moved to trigger; manual updates removed.",
+    "search_vector column dropped; related code removed.",
+    "Search decision documented in docs/api_v1_jobs.md.",
+    "Toolchain pinned in requirements/ with README note.",
+    "bleach and types-bleach removed.",
+    "Iteration guard fixed.",
+    "All gates pass (black, ruff, mypy, migration checks, pytest) with verbatim output pasted.",
+    "Completion percentage reported."
+  ],
+  "subtask_count": 9,
+  "completed_count": 0,
+  "created_at": "2026-09-04T00:00:00Z"
+}

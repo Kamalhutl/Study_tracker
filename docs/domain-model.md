@@ -73,7 +73,7 @@ row per company; URLs unique per company.
 - **Human-edit protection:** `manually_edited_fields` (scraper never
   overwrites), `is_manual_status` (ladder never auto-moves).
 - **Quality/ops:** `duplicate_of`, `extraction_confidence`, `trust_label`,
-  `report_count`, `view_count`, `save_count`, `search_vector` (GIN),
+  `report_count`, `view_count`, `save_count`, (search_vector removed in migration 0004),
   `raw_payload`.
 
 Key constraints: one `(company, source_job_id)`; one

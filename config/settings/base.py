@@ -44,6 +44,7 @@ LOCAL_APPS = [
     "apps.jobs",
     "apps.scraping",
     "apps.career_detection",
+    "apps.exams",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -158,8 +159,9 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_THROTTLE_RATES": {
         "anon": "60/min",
-        "user": "600/min",
+        "user": "300/min",
         "auth": "10/min",
+        "report": "10/hour",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
@@ -235,7 +237,8 @@ FETCH_USER_AGENT = env(
 )
 FETCH_TIMEOUT_SECONDS = 10
 FETCH_MAX_REDIRECTS = 5
-FETCH_MAX_RESPONSE_BYTES = 3 * 1024 * 1024
+FETCH_MAX_RESPONSE_BYTES = 20 * 1024 * 1024
+SANITIZE_MAX_INPUT_BYTES = 512 * 1024  # 512 KiB default
 FETCH_ROBOTS_OBEY = True
 FETCH_ROBOTS_CACHE_SECONDS = 3600
 FETCH_PER_DOMAIN_RATE = 10  # requests per minute per domain
@@ -247,12 +250,14 @@ FETCH_ALLOW_DYNAMIC = True
 FETCH_ALLOW_STEALTHY = False  # not used in detection; Prompt 4 flips this
 FETCH_PROXY = env("FETCH_PROXY", default="")  # optional http://user:pass@host:port
 FETCH_SMOKE_URLS: list[str] = []  # `manage.py run_smoke` targets; empty = offline skip
+EXAM_PDF_MAX_BYTES = 20 * 1024 * 1024  # 20 MiB
+EXAM_PDF_MAX_PAGES = 500
 
 # ---------------------------------------------------------------------------
 # Career detection
 # ---------------------------------------------------------------------------
-DETECTION_MAX_URL_CHECKS = 25
-DETECTION_TOTAL_BUDGET_SECONDS = 120
+DETECTION_MAX_URL_CHECKS = 60
+DETECTION_TOTAL_BUDGET_SECONDS = 300
 DETECTION_MAX_CANDIDATES = 10
 DETECTION_MIN_CANDIDATE_SCORE = 20
 DETECTION_SAMPLE_TITLE_LIMIT = 5
@@ -276,6 +281,7 @@ DETECTION_COMMON_PATHS = [
     "/openings",
     "/vacancies",
 ]
+DETECTION_FETCH_RATE_PER_DOMAIN = 10
 
 # ---------------------------------------------------------------------------
 # Logging (JSON to stdout, request_id on every record)

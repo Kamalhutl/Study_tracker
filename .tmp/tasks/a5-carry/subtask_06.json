@@ -1,0 +1,20 @@
+{
+  "id": "a5-carry-06",
+  "seq": "06",
+  "title": "Pin toolchain versions in requirements/",
+  "status": "pending",
+  "depends_on": [],
+  "parallel": true,
+  "suggested_agent": "CoderAgent",
+  "context_files": [],
+  "reference_files": ["requirements/", "README.md"],
+  "acceptance_criteria": [
+    "Exact versions pinned for: mypy, django-stubs, django-stubs-ext, djangorestframework-stubs, Django, nh3.",
+    "Versions match current installed packages (read from pip list).",
+    "README.md updated with note explaining pinning due to past breakages."
+  ],
+  "deliverables": [
+    "Updated requirements/*.txt files",
+    "Updated README.md"
+  ]
+}

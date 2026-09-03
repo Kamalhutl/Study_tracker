@@ -10,6 +10,7 @@ picked up by escalation where needed.
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from collections.abc import Callable
 from typing import Any, TypeVar
 from urllib.parse import urljoin
@@ -33,6 +34,11 @@ from .scoring import score_candidate
 from .types import ORIGIN_COSTS, DetectionContext, RawCandidate
 
 logger = logging.getLogger("study_tracker.career_detection.strategies")
+# Simple per-run fetch cache and DNS/circuit breaker
+_fetch_cache: dict[str, Any] = {}
+_dns_cache: dict[str, Any] = {}
+_host_failures: defaultdict[str, int] = defaultdict(int)
+_HOST_DEAD_THRESHOLD = 3
 
 T = TypeVar("T")
 
@@ -61,6 +67,18 @@ def _normalize(url: str) -> str:
     """Absolute http(s) candidate URL, standardized for dedupe keys."""
     if "://" not in url:
         url = f"https://{url}"
+    # Strip default ports
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    if parsed.port in (80, 443):
+        # remove port from netloc
+        url = url.replace(f":{parsed.port}", "")
+    # Unify www. prefix: we keep whatever is given, but for comparison we might want to be consistent.
+    # We'll keep as given but ensure trailing slash normalized.
+    url = url.rstrip("/")
+    if not url.endswith("/"):
+        url = url + "/"
     return str(normalize_url(url))
 
 
@@ -115,22 +133,42 @@ class AtsPatternStrategy:
 
     def _fetch_homepage(self, ctx: DetectionContext) -> Any | None:
         ctx.spend(1)
-        try:
-            result = fetch(ctx.root_url, mode=FetchMode.HTTP)
-        except FetchBudgetExceeded:
-            raise
-        except ThrottleUnavailable:
-            raise
-        except (FetchDomainBlocked, FetchError) as exc:
-            ctx.homepage_error = str(exc)
-            ctx.notes.append(f"ats_pattern: homepage unreachable: {exc}")
-            return None
-        except Exception as exc:
-            ctx.homepage_error = str(exc)
-            ctx.notes.append(f"ats_pattern: homepage error: {exc}")
-            return None
-        ctx.homepage = result
-        return result
+        # Retry with www fallback on 403 or connection error
+        urls_to_try = [ctx.root_url]
+        # Add www version if root is bare
+        if not ctx.root_url.startswith("https://www."):
+            www_url = ctx.root_url.replace("https://", "https://www.")
+            if www_url != ctx.root_url:
+                urls_to_try.append(www_url)
+        # Also try bare if root is www
+        if ctx.root_url.startswith("https://www."):
+            bare_url = ctx.root_url.replace("https://www.", "https://")
+            if bare_url != ctx.root_url:
+                urls_to_try.append(bare_url)
+        for url in urls_to_try:
+            try:
+                result = fetch(url, mode=FetchMode.HTTP)
+                if not (200 <= result.status_code < 300):
+                    ctx.homepage_error = f"{url} returned {result.status_code}"
+                    ctx.notes.append(
+                        f"ats_pattern: homepage {url} unreachable: returned {result.status_code}"
+                    )
+                    continue
+                ctx.homepage = result
+                return result
+            except FetchBudgetExceeded:
+                raise
+            except ThrottleUnavailable:
+                raise
+            except (FetchDomainBlocked, FetchError) as exc:
+                ctx.homepage_error = str(exc)
+                ctx.notes.append(f"ats_pattern: homepage {url} unreachable: {exc}")
+                continue
+            except Exception as exc:
+                ctx.homepage_error = str(exc)
+                ctx.notes.append(f"ats_pattern: homepage {url} error: {exc}")
+                continue
+        return None
 
     def _sniff_anchor(self, ctx: DetectionContext, href: str, text: str) -> None:
         if not href.lower().startswith(("http://", "https://")):
@@ -405,13 +443,14 @@ class SubdomainStrategy:
                 continue
             ctx.spend(1)
             try:
-                ok, _status = head_ok(url)
+                # Use GET instead of HEAD because some servers don't support HEAD
+                result = fetch(url, mode=FetchMode.HTTP)
+                if result.status_code < 200 or result.status_code >= 300:
+                    continue
             except FetchBudgetExceeded:
                 raise
             except Exception as exc:
                 ctx.notes.append(f"subdomain_guess: {url}: {exc}")
-                continue
-            if not ok:
                 continue
             candidate = _candidate_for_url(
                 url, origin="subdomain_guess", evidence={}, via="subdomain guess"
@@ -499,17 +538,28 @@ class VerifyStrategy:
         final_url = result.final_url or candidate.url
         final_host = extract.host_of(final_url)
         request_host = extract.host_of(candidate.url)
+        # Dedupe: if final_url differs, collapse candidates by final_url
+        if final_url != candidate.url:
+            # We will later dedupe in _rank? We'll add a note.
+            # For now, store redirect info.
+            evidence["redirected_to"] = final_url
         if final_host and request_host and final_host != request_host:
-            registrable = extract.registrable_domain(request_host)
-            trusted = not _is_blocked(final_host) and (
-                extract.is_own_host(final_host, registrable) or extract.is_ats_host(final_host)
-            )
+            # If the request came from an ATS, allow redirect to the company's own domain.
+            if extract.is_ats_host(request_host):
+                company_registrable = extract.registrable_domain(ctx.domain)
+                trusted = not _is_blocked(final_host) and extract.is_own_host(
+                    final_host, company_registrable
+                )
+            else:
+                registrable = extract.registrable_domain(request_host)
+                trusted = not _is_blocked(final_host) and (
+                    extract.is_own_host(final_host, registrable) or extract.is_ats_host(final_host)
+                )
             if not trusted:
                 ctx.notes.append(
                     f"verify: {candidate.url} redirected to untrusted {final_host}; rejected"
                 )
                 return False
-            evidence["redirected_to"] = final_url
         html = result.html
         status = result.status_code
         links = extract.links_from_html(html, result.final_url)

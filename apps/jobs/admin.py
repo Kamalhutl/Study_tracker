@@ -92,7 +92,7 @@ class JobReportInline(admin.TabularInline):  # type: ignore[type-arg]
     model = JobReport
     extra = 0
     can_delete = False
-    readonly_fields = ("user", "reason", "comment", "status", "created_at")
+    readonly_fields = ("user", "reason", "detail", "status", "created_at")
 
     def has_add_permission(self, request: HttpRequest, obj: Job | None = None) -> bool:
         return False
@@ -156,7 +156,6 @@ class JobAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         "reviewed_by",
         "reviewed_at",
         "manually_edited_fields",
-        "search_vector",
         "raw_payload_pretty",
         "duplicate_of",
         "extraction_confidence",
@@ -260,7 +259,7 @@ class JobAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         ),
         (
             "Debug (collapsed)",
-            {"classes": ("collapse",), "fields": ("raw_payload_pretty", "search_vector")},
+            {"classes": ("collapse",), "fields": ("raw_payload_pretty",)},
         ),
     )
     actions = (
@@ -270,7 +269,6 @@ class JobAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         "reopen_selected",
         "approve_review_selected",
         "reject_review_selected",
-        "refresh_search_vector_selected",
     )
 
     def has_add_permission(self, request: HttpRequest) -> bool:
@@ -393,15 +391,6 @@ class JobAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
 
     reject_review_selected.short_description = "Reject review (unpublished)"  # type: ignore[attr-defined]
 
-    def refresh_search_vector_selected(self, request: HttpRequest, queryset: QuerySet[Any]) -> None:
-        for job in queryset:
-            services.refresh_search_vector(job=job)
-        self.message_user(
-            request, f"Refreshed search vectors for {queryset.count()} job(s).", messages.SUCCESS
-        )
-
-    refresh_search_vector_selected.short_description = "Refresh search vectors"  # type: ignore[attr-defined]
-
 
 class SavedJobAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     """Read-only view of user saves."""
@@ -421,15 +410,15 @@ class SavedJobAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
 
 
 class JobReportAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
-    list_display = ("job", "user", "reason", "comment", "status", "created_at")
+    list_display = ("job", "user", "reason", "detail", "status", "created_at")
     list_filter = ("status", "reason")
     list_select_related = ("job", "user", "job__company")
-    search_fields = ("job__title", "comment")
+    search_fields = ("job__title", "detail")
     readonly_fields = (
         "job",
         "user",
         "reason",
-        "comment",
+        "detail",
         "status",
         "resolved_by",
         "resolved_at",

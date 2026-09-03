@@ -1,0 +1,22 @@
+{
+  "id": "a5-carry-09",
+  "seq": "09",
+  "title": "Run gates and paste output",
+  "status": "pending",
+  "depends_on": ["01", "02", "03", "04", "05", "06", "07", "08"],
+  "parallel": false,
+  "suggested_agent": "CoderAgent",
+  "context_files": [],
+  "reference_files": [],
+  "acceptance_criteria": [
+    "black formatting passes.",
+    "ruff linting passes.",
+    "mypy type checking passes.",
+    "migration checks pass (no pending migrations).",
+    "pytest runs with coverage (fail_under=88) and passes.",
+    "Verbatim output of all gates is pasted in the result."
+  ],
+  "deliverables": [
+    "Console output log"
+  ]
+}

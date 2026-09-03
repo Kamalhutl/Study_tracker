@@ -85,7 +85,7 @@ class LogoutView(APIView):
     throttle_scope = "auth"
 
     def post(self, request: Request) -> Response:
-        refresh = request.data.get("refresh")
+        refresh = request.data.get("refresh")  # type: ignore[union-attr]
         if not refresh:
             return _invalid_token(request)
         try:

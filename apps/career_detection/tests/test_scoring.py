@@ -145,14 +145,22 @@ def test_ats_host_fires_for_smartrecruiters():
 
 
 def test_career_path_keyword_fires_on_segments():
-    for url in (
-        "https://example.com/careers",
-        "https://example.com/jobs-at-company",
-        "https://example.com/landing/careers",
-    ):
-        score, trail = score_candidate(url=url, evidence={"domain": DOMAIN})
-        assert "career_path_keyword" in rules(score, trail), url
-        assert score >= 25
+    # Single segment: score 25
+    url = "https://example.com/careers"
+    score, trail = score_candidate(url=url, evidence={"domain": DOMAIN})
+    assert "career_path_keyword" in rules(score, trail)
+    assert score == 25
+    # Hyphenated single segment: score 25
+    url = "https://example.com/jobs-at-company"
+    score, trail = score_candidate(url=url, evidence={"domain": DOMAIN})
+    assert "career_path_keyword" in rules(score, trail)
+    assert score == 25
+    # Two segments: deep_path applies, score 25-10=15
+    url = "https://example.com/landing/careers"
+    score, trail = score_candidate(url=url, evidence={"domain": DOMAIN})
+    assert "career_path_keyword" in rules(score, trail)
+    assert "deep_path" in rules(score, trail)
+    assert score == 15
 
 
 def test_career_path_keyword_does_not_fire_on_partial_segment():
@@ -221,13 +229,27 @@ def test_noise_path_negative():
     assert score == 0  # 25 keyword - 30 noise, clamped
 
 
+def test_template_noise_token():
+    """Defect 5: template, templates, resources, library, examples are noise tokens."""
+    for token in ("template", "templates", "resources", "library", "examples"):
+        score, trail = score_candidate(
+            url=f"https://example.com/{token}/careers", evidence={"domain": DOMAIN}
+        )
+        assert "noise_path" in rules(score, trail)
+        # career keyword in path but noise token also present -> score reduced
+        # 25 - 30 = -5 clamped to 0
+        assert score == 0
+
+
 def test_single_posting_negative():
     score, trail = score_candidate(
         url="https://example.com/careers/3033",
         evidence={"domain": DOMAIN, "single_posting": True},
     )
     assert "single_posting" in rules(score, trail)
-    assert score == 25 - 15
+    # deep_path also applies (2 segments), so score = 25 -15 -10 = 0
+    assert "deep_path" in rules(score, trail)
+    assert score == 0
 
 
 def test_deep_path_negative():
@@ -237,6 +259,24 @@ def test_deep_path_negative():
     )
     assert "deep_path" in rules(score, trail)
     assert score == 25 - 10  # example 4: 35
+
+
+def test_deep_path_fires_for_two_segments_below_root():
+    """Defect 5: deep_path should fire for paths with 2+ non-empty segments."""
+    # Two segments: "careers" and "devops" -> deep_path should fire
+    score, trail = score_candidate(
+        url="https://example.com/careers/devops",
+        evidence={"domain": DOMAIN},
+    )
+    assert "deep_path" in rules(score, trail)
+    assert score == 25 - 10
+    # One segment: "careers" -> no deep_path
+    score, trail = score_candidate(
+        url="https://example.com/careers",
+        evidence={"domain": DOMAIN},
+    )
+    assert "deep_path" not in rules(score, trail)
+    assert score == 25
 
 
 def test_shallow_path_not_deep():
@@ -364,12 +404,12 @@ def test_absent_evidence_counts_false():
                 "json_ld_jobposting",
             },
         ),
-        # 5. Noise path cancels the keyword, clamped at 0: 25-30+5
+        # 5. Noise path cancels the keyword, clamped at 0: 25-30+5, deep_path also applies (2 segments) -> 25-30-10+5 = -10 clamped to 0
         (
             "https://acme.com/blog/we-are-hiring-2024",
             {"domain": "acme.com", "http_200": True},
             0,
-            {"career_path_keyword", "noise_path", "http_200"},
+            {"career_path_keyword", "noise_path", "http_200", "deep_path"},
         ),
         # 6. Asset extension cancels the keyword, clamped at 0: 25-40+5
         (

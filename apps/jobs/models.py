@@ -3,8 +3,7 @@
 from typing import ClassVar
 
 from django.conf import settings
-from django.contrib.postgres.indexes import GinIndex
-from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import F, Q
 from django.utils import timezone
@@ -39,6 +38,7 @@ class Job(UUIDModel, TimeStampedModel, SoftDeleteModel):
     title_normalized = models.CharField(max_length=500, db_index=True)
     description = models.TextField(blank=True)
     description_html = models.TextField(blank=True)
+    description_html_sanitized = models.TextField(blank=True)
     location_raw = models.CharField(max_length=500, blank=True)
     city = models.CharField(max_length=120, blank=True, db_index=True)
     state = models.CharField(max_length=120, blank=True)
@@ -110,7 +110,7 @@ class Job(UUIDModel, TimeStampedModel, SoftDeleteModel):
     save_count = models.PositiveIntegerField(default=0)
 
     # --- Search ----------------------------------------------------------
-    search_vector = SearchVectorField(null=True, blank=True)
+
     raw_payload = models.JSONField(default=dict)
 
     objects: ClassVar[JobManager] = JobManager()
@@ -147,7 +147,7 @@ class Job(UUIDModel, TimeStampedModel, SoftDeleteModel):
             ),
         ]
         indexes = [
-            GinIndex(fields=["search_vector"], name="idx_job_search_vector"),
+            GinIndex(OpClass("title", name="gin_trgm_ops"), name="job_title_trgm"),
             models.Index(fields=["status", "is_published", "-posted_at"], name="idx_job_feed"),
             models.Index(fields=["company", "status"], name="idx_job_company_status"),
             models.Index(fields=["needs_review", "-first_seen_at"], name="idx_job_review_queue"),
@@ -176,12 +176,15 @@ class SavedJob(UUIDModel, TimeStampedModel):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_jobs"
     )
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="saves")
-    note = models.CharField(max_length=500, blank=True)
+    notes = models.TextField(blank=True)
 
     class Meta:
         ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(fields=["user", "job"], name="uniq_saved_job_per_user")
+        ]
+        indexes = [
+            models.Index(fields=["user", "-created_at"], name="idx_savedjob_user_created"),
         ]
 
     def __str__(self) -> str:
@@ -198,7 +201,7 @@ class JobReport(UUIDModel, TimeStampedModel):
         related_name="job_reports",
     )
     reason = models.CharField(max_length=20, choices=ReportReason.choices)
-    comment = models.TextField(blank=True)
+    detail = models.TextField(blank=True)
     status = models.CharField(
         max_length=16, choices=ReportStatus.choices, default=ReportStatus.OPEN, db_index=True
     )
@@ -220,6 +223,9 @@ class JobReport(UUIDModel, TimeStampedModel):
                 condition=Q(status="open"),
                 name="uniq_open_report_per_user_job",
             )
+        ]
+        indexes = [
+            models.Index(fields=["status", "-created_at"], name="idx_jobreport_status_created"),
         ]
 
     def __str__(self) -> str:

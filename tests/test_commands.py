@@ -1,4 +1,4 @@
-"""Management command tests: add_company, companies_due, seed_demo, rebuild_search_vectors."""
+"""Management command tests: add_company, companies_due, seed_demo."""
 
 import json
 
@@ -9,7 +9,7 @@ from django.core.management.base import CommandError
 
 from apps.companies.models import Company
 from apps.jobs.models import Job
-from tests.factories import AdminUserFactory, CompanyFactory, JobFactory
+from tests.factories import AdminUserFactory, CompanyFactory
 
 
 @pytest.fixture
@@ -124,21 +124,3 @@ class TestSeedDemo:
         monkeypatch.setattr(settings, "ALLOW_DEMO_SEED", False, raising=False)
         with pytest.raises(CommandError):
             call_command("seed_demo", "--actor-email", actor.email)
-
-
-class TestRebuildSearchVectors:
-    def test_full_rebuild(self, capsys):
-        company = CompanyFactory(slug="rebuild-co")
-        job = JobFactory(company=company, title="Rebuild Me")
-        call_command("rebuild_search_vectors")
-        assert Job.objects.search("rebuild").filter(pk=job.pk).exists()
-
-    def test_per_company(self, capsys):
-        company = CompanyFactory(slug="rebuild-target")
-        JobFactory(company=company, title="Target Job")
-        call_command("rebuild_search_vectors", "--company", "rebuild-target")
-        assert Job.objects.search("target").filter(company=company).exists()
-
-    def test_unknown_company(self, capsys):
-        call_command("rebuild_search_vectors", "--company", "nope-nope")
-        assert "nope-nope" in capsys.readouterr().err

@@ -1,0 +1,18 @@
+{
+  "id": "a5-carry-05",
+  "seq": "05",
+  "title": "Update docs/api_v1_jobs.md with search decision",
+  "status": "pending",
+  "depends_on": ["04"],
+  "parallel": false,
+  "suggested_agent": "CoderAgent",
+  "context_files": [],
+  "reference_files": ["docs/api_v1_jobs.md"],
+  "acceptance_criteria": [
+    "Documentation updated to state that search uses trigram (TrigramSimilarity) and search_vector is no longer used.",
+    "Decision to drop search_vector column is recorded."
+  ],
+  "deliverables": [
+    "Updated docs/api_v1_jobs.md"
+  ]
+}

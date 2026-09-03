@@ -216,7 +216,7 @@ class Command(BaseCommand):
 
         # 8. Open report.
         JobReport.objects.create(
-            job=jobs[2], user=actor, reason=ReportReason.EXPIRED, comment="Listing vanished."
+            job=jobs[2], user=actor, reason=ReportReason.EXPIRED, detail="Listing vanished."
         )
 
         # 9. A due-now, healthy custom company so the scheduler panel has work.

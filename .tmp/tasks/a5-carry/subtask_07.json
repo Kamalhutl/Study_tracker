@@ -1,0 +1,18 @@
+{
+  "id": "a5-carry-07",
+  "seq": "07",
+  "title": "Uninstall bleach and types-bleach, remove from requirements",
+  "status": "pending",
+  "depends_on": [],
+  "parallel": true,
+  "suggested_agent": "CoderAgent",
+  "context_files": [],
+  "reference_files": ["requirements/"],
+  "acceptance_criteria": [
+    "bleach and types-bleach removed from all requirements/*.txt files.",
+    "Packages uninstalled (or confirmed not used)."
+  ],
+  "deliverables": [
+    "Updated requirements/*.txt files"
+  ]
+}

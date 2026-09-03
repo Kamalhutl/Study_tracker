@@ -1,0 +1,22 @@
+{
+  "content": [
+    {
+      "id": "sr-job-001",
+      "name": "Data Analyst",
+      "location": {"city": "Austin", "region": "TX", "country": "US", "remote": true},
+      "department": {"label": "Analytics"},
+      "experienceLevel": {"label": "Mid-Senior"},
+      "typeOfEmployment": {"label": "Permanent"},
+      "ref": "https://careers.smartrecruiters.com/acme/sr-job-001"
+    },
+    {
+      "id": "sr-job-002",
+      "name": "Software Engineer",
+      "location": {"city": "Boston", "region": "MA", "country": "US", "remote": false},
+      "department": {"label": "Engineering"},
+      "experienceLevel": {"label": "Senior"},
+      "typeOfEmployment": {"label": "Permanent"},
+      "ref": "https://careers.smartrecruiters.com/acme/sr-job-002"
+    }
+  ]
+}

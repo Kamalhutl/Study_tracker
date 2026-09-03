@@ -31,7 +31,7 @@ logger = logging.getLogger("study_tracker.career_detection.tasks")
 _NO_RETRY = (FetchDomainBlocked, FetchRobotsDisallowed, FetchNotFound)
 
 
-@app.task(  # type: ignore[untyped-decorator]
+@app.task(
     bind=True,
     name="apps.career_detection.tasks.detect_career_url",
     max_retries=3,
@@ -68,7 +68,7 @@ def detect_career_url(self: Any, company_id: str) -> dict[str, object]:
     return _summarize(result)
 
 
-@shared_task(name="apps.career_detection.tasks.detect_pending_companies")  # type: ignore[untyped-decorator]
+@shared_task(name="apps.career_detection.tasks.detect_pending_companies")
 def detect_pending_companies_task(limit: int = 50) -> dict[str, object]:
     """Enumerate PENDING companies and enqueue one task apiece."""
     from apps.companies.models import Company

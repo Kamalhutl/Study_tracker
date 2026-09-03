@@ -6,8 +6,11 @@ factory-boy>=3.3,<4
 freezegun>=1.5,<2
 ruff>=0.8,<0.9
 black>=24.10,<25
-mypy>=1.14,<2
-django-stubs>=5.1,<6
-djangorestframework-stubs>=3.15,<4
+# Pinned to exact versions to avoid breakage (see README.md in this directory)
+mypy==2.3.1
+django-stubs==6.1.0
+django-stubs-ext==6.1.0
+djangorestframework-stubs==3.18.1
 types-requests>=2.32,<3
 pre-commit>=4.0,<5
+celery-types>=0.22.0

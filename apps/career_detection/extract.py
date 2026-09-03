@@ -64,6 +64,11 @@ NOISE_TOKENS: tuple[str, ...] = (
     "podcast",
     "glossary",
     "pricing",
+    "template",
+    "templates",
+    "resources",
+    "library",
+    "examples",
 )
 
 # Known supported ATS registrable hosts (suffix match, see §6.4 ats_host/foreign_host).

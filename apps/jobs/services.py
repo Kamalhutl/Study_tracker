@@ -10,9 +10,9 @@ from collections.abc import Iterable
 from datetime import timedelta
 from typing import Any
 
-from django.contrib.postgres.search import SearchVector
+import nh3
 from django.db import transaction
-from django.db.models import F, OuterRef, Subquery
+from django.db.models import F
 from django.utils import timezone
 
 from apps.audit_logs.services import record, snapshot
@@ -27,6 +27,64 @@ from .enums import (
 )
 from .models import Job, JobReport, JobStatusEvent, SavedJob
 
+# Allowed HTML tags and attributes for sanitizing description_html
+_ALLOWED_TAGS = frozenset(
+    {
+        "p",
+        "br",
+        "strong",
+        "em",
+        "u",
+        "ul",
+        "ol",
+        "li",
+        "h3",
+        "h4",
+        "a",
+        "code",
+        "pre",
+        "blockquote",
+    }
+)
+
+# Create a single Cleaner instance for reuse (thread-safe)
+_SANITIZE_CLEANER = nh3.Cleaner(
+    tags=_ALLOWED_TAGS,
+    attributes={
+        "*": set(),  # No attributes on any tag by default
+        "a": {"href", "title", "target"},  # Only these attributes on <a>
+    },
+    link_rel="nofollow noopener noreferrer",
+    url_schemes={"http", "https", "mailto"},
+    set_tag_attribute_values={"a": {"target": "_blank"}},
+    strip_comments=True,
+)
+
+
+def _sanitize_html(html: str, job_id: str | None = None) -> str:
+    if not html:
+        return ""
+
+    # Check input size against cap
+    from django.conf import settings
+
+    max_bytes = getattr(settings, "SANITIZE_MAX_INPUT_BYTES", 512 * 1024)
+
+    if len(html.encode("utf-8")) > max_bytes:
+        # Truncate at the cap before sanitizing
+        truncated_html = html.encode("utf-8")[:max_bytes].decode("utf-8", errors="replace")
+        if job_id:
+            logger.warning(
+                "Sanitizer input cap exceeded for job %s: %d bytes truncated to %d bytes",
+                job_id,
+                len(html.encode("utf-8")),
+                max_bytes,
+            )
+        html = truncated_html
+
+    return _SANITIZE_CLEANER.clean(html)
+
+
 logger = logging.getLogger("study_tracker.jobs")
 
 _PUNCT_RE = re.compile(r"[^\w\s]+", re.UNICODE)
@@ -35,6 +93,7 @@ _UPDATABLE_FIELDS = (
     "title",
     "description",
     "description_html",
+    "description_html_sanitized",
     "apply_url",
     "location_raw",
     "city",
@@ -183,6 +242,8 @@ def _create_job(
         "source_url": str(payload.get("source_url") or ""),
         "title": title,
         "description": str(payload.get("description") or ""),
+        "description_html": str(payload.get("description_html") or ""),
+        "description_html_sanitized": _sanitize_html(str(payload.get("description_html") or "")),
         "location_raw": str(payload.get("location_raw") or ""),
         "extraction_confidence": confidence,
         "raw_payload": payload,
@@ -203,7 +264,6 @@ def _create_job(
             trigger="scrape",
             scrape_run_id=scrape_run_id,
         )
-        refresh_search_vector(job=job)
         record(
             "job.created",
             instance=job,
@@ -282,7 +342,6 @@ def _update_job(
                 after=snapshot(job, ["status", "closed_at", "reopened_count"]),
                 source="SYSTEM",
             )
-        refresh_search_vector(job=job)
     return job, outcome
 
 
@@ -520,7 +579,6 @@ def edit_job_fields(*, job: Job, changes: dict[str, Any], actor: Any) -> Job:
             after=snapshot(job),
             source="ADMIN",
         )
-        refresh_search_vector(job=job)
     return job
 
 
@@ -566,7 +624,7 @@ def reject_job_review(*, job: Job, actor: Any, reason: str) -> Job:
 # ---------------------------------------------------------------------------
 # Reports / saves
 # ---------------------------------------------------------------------------
-def submit_job_report(*, job: Job, user: Any, reason: str, comment: str = "") -> JobReport:
+def submit_job_report(*, job: Job, user: Any, reason: str, detail: str = "") -> JobReport:
     if reason not in ReportReason.values:
         from django.core.exceptions import ValidationError
 
@@ -576,7 +634,7 @@ def submit_job_report(*, job: Job, user: Any, reason: str, comment: str = "") ->
             job=job,
             user=user,
             status=ReportStatus.OPEN,
-            defaults={"reason": reason, "comment": comment},
+            defaults={"reason": reason, "detail": detail},
         )
         if not created:
             from django.core.exceptions import ValidationError
@@ -599,7 +657,7 @@ def submit_job_report(*, job: Job, user: Any, reason: str, comment: str = "") ->
 
 def resolve_report(*, report: JobReport, actor: Any, accept: bool, note: str = "") -> JobReport:
     with transaction.atomic():
-        report.status = ReportStatus.ACCEPTED if accept else ReportStatus.REJECTED
+        report.status = ReportStatus.RESOLVED if accept else ReportStatus.REJECTED
         report.resolved_by = actor
         report.resolved_at = timezone.now()
         report.resolution_note = note
@@ -651,22 +709,6 @@ def unsave_job(*, user: Any, job: Job) -> None:
 # ---------------------------------------------------------------------------
 # Search vectors
 # ---------------------------------------------------------------------------
-def refresh_search_vector(*, job: Job | None = None, company: Any = None) -> None:
-    """Recompute search_vector. Job path = 1 UPDATE; company path = bulk."""
-    from apps.companies.models import Company
-
-    company_name = Subquery(Company.objects.filter(pk=OuterRef("company_id")).values("name"))
-    expression = (
-        SearchVector("title", weight="A")
-        + SearchVector("description", weight="B")
-        + SearchVector(company_name, weight="A")
-    )
-    if job is not None:
-        Job.objects.filter(pk=job.pk).update(search_vector=expression)
-    elif company is not None:
-        Job.objects.filter(company=company).update(search_vector=expression)
-    else:
-        Job.objects.filter(is_deleted=False).update(search_vector=expression)
 
 
 def compute_trust_label(job: Job) -> str:

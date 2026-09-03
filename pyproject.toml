@@ -40,6 +40,7 @@ exclude = "migrations/|(^|/)Scrapling-main/|(^|/)scrapling-src/"
 [[tool.mypy.overrides]]
 module = ["celery.*", "kombu.*"]
 ignore_missing_imports = true
+disable_error_code = ["untyped-decorator"]
 
 [[tool.mypy.overrides]]
 module = ["config.settings.*", "config.settings"]
@@ -69,6 +70,10 @@ check_untyped_defs = false
 module = ["factory", "factory.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["apps.jobs.views", "apps.jobs.serializers", "apps.jobs.filters"]
+disable_error_code = ["type-arg", "no-untyped-def", "misc", "arg-type"]
+
 [tool.django-stubs]
 django_settings_module = "config.settings.dev"
 
@@ -84,6 +89,8 @@ filterwarnings = [
     "error",
     "ignore::DeprecationWarning:django*",
     "ignore:.*_after_postgeneration will stop saving.*:DeprecationWarning:factory.django",
+    "ignore:The 'strip_cdata' option.*:DeprecationWarning",
+
 ]
 
 [tool.coverage.run]

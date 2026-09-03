@@ -1,0 +1,24 @@
+{
+  "jobs": [
+    {
+      "id": 4567890,
+      "title": "Senior Software Engineer",
+      "location": {"name": "Remote"},
+      "content": "<div><p>We are looking for a Senior Software Engineer to join our team.</p><p>You will work on exciting projects and technologies.</p></div>",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/4567890",
+      "departments": [{"name": "Engineering"}],
+      "offices": [{"name": "San Francisco"}],
+      "updated_at": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": 4567891,
+      "title": "Product Manager",
+      "location": {"name": "New York, NY"},
+      "content": "<div><p>Product Manager role at ACME Corp.</p></div>",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/4567891",
+      "departments": [{"name": "Product"}],
+      "offices": [{"name": "New York"}],
+      "updated_at": "2025-01-14T09:00:00Z"
+    }
+  ]
+}

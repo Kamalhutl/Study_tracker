@@ -1,0 +1,18 @@
+{
+  "id": "a5-carry-03",
+  "seq": "03",
+  "title": "Add regression test for bulk_update bypass",
+  "status": "pending",
+  "depends_on": ["02"],
+  "parallel": false,
+  "suggested_agent": "CoderAgent",
+  "context_files": [],
+  "reference_files": ["tests/"],
+  "acceptance_criteria": [
+    "Test added that verifies bulk_update on title/description updates search_vector via trigger.",
+    "Test passes with trigger in place."
+  ],
+  "deliverables": [
+    "Test file or addition to existing test suite"
+  ]
+}

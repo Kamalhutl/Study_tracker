@@ -150,8 +150,10 @@ def score_candidate(*, url: str, evidence: dict[str, Any]) -> tuple[int, list[di
     if evidence.get("single_posting"):
         trail.append(_rule("single_posting", -15, "one detail page, not a listing"))
         score -= 15
-    if len(_path_segments(path_of(url))) > 3:
-        trail.append(_rule("deep_path", -10, "path deeper than 3 segments"))
+    # deep_path: two or more non-empty segments below root
+    segments = [s for s in _path_segments(path_of(url)) if s]
+    if len(segments) >= 2:
+        trail.append(_rule("deep_path", -10, "path deeper than 2 segments"))
         score -= 10
     if _query_count(url) >= 2:
         trail.append(_rule("query_heavy", -5, "2+ query parameters"))

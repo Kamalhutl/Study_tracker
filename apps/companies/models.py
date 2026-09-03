@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any, ClassVar
 
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -131,6 +132,7 @@ class Company(UUIDModel, TimeStampedModel, SoftDeleteModel):
             ),
         ]
         indexes = [
+            GinIndex(OpClass("name", name="gin_trgm_ops"), name="company_name_trgm"),
             models.Index(
                 fields=["is_verified", "is_active", "next_scrape_at"],
                 name="idx_company_scheduler",

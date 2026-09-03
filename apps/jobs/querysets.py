@@ -36,14 +36,14 @@ class JobQuerySet(SoftDeleteQuerySet):
         """Jobs that produced a status event during a given scrape run."""
         return self.filter(status_events__scrape_run_id=scrape_run_id).distinct()
 
-    def search(self, term: str) -> "JobQuerySet":
-        return self.filter(search_vector=term)
-
     def with_company(self) -> "JobQuerySet":
         return self.select_related("company")
 
     def fresh(self, hours: int) -> "JobQuerySet":
         return self.filter(last_seen_at__gte=timezone.now() - timedelta(hours=hours))
+
+    def public(self) -> "JobQuerySet":
+        return self.live()
 
 
 class JobManager(SoftDeleteManager.from_queryset(JobQuerySet)):  # type: ignore[misc]
