@@ -70,7 +70,11 @@ class ConductingBody(UUIDModel, TimeStampedModel, SoftDeleteModel):
 
     class Meta:
         verbose_name_plural = "conducting bodies"
-        indexes = [models.Index(fields=["slug"]), models.Index(fields=["is_active"])]
+        indexes = [
+            models.Index(fields=["slug"]),
+            models.Index(fields=["is_active"]),
+            GinIndex(fields=["name"], opclasses=["gin_trgm_ops"], name="conductingbody_name_trgm"),
+        ]
 
     def __str__(self):
         return self.name
@@ -133,7 +137,11 @@ class ExamCycle(UUIDModel, TimeStampedModel, SoftDeleteModel):
             models.CheckConstraint(
                 condition=models.Q(extraction_confidence__gte=0, extraction_confidence__lte=100),
                 name="extraction_confidence_range",
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(is_published=False) | models.Q(verified_by_human=True),
+                name="examcycle_published_requires_verification",
+            ),
         ]
 
     def __str__(self):
