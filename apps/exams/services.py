@@ -2,7 +2,9 @@ from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.forms.models import model_to_dict
 
+from apps.audit_logs.services import record
 from apps.exams.models import ChangeDetectedBy, ExamCycle, ExamDateChange
 
 
@@ -63,6 +65,7 @@ def update_exam_cycle(
         "result_date",
     }
     with transaction.atomic():
+        old_data = model_to_dict(cycle)
         # Enforce publication rule: can't set is_published=True if not verified
         if changes.get("is_published") is True and not changes.get(
             "verified_by_human", cycle.verified_by_human
@@ -87,5 +90,14 @@ def update_exam_cycle(
                         note=note,
                     )
         cycle.save()
-        # TODO: audit log entry
+        # Audit log
+        after_data = model_to_dict(cycle)
+        record(
+            action="update_exam_cycle",
+            actor=actor,
+            instance=cycle,
+            before=old_data,
+            after=after_data,
+            source=source_url,
+        )
         return cycle
