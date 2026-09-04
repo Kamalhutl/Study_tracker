@@ -7,7 +7,13 @@
 Public endpoints allow anonymous access. Protected endpoints (save/unsave) require JWT authentication.
 
 ## Publication Rule
-Only cycles with `is_published=True` and `verified_by_human=True` are exposed to non-staff users. All list and detail views apply `public()` queryset methods.
+Only cycles with `is_published=True` and `verified_by_human=True` are exposed to non-staff users. This is enforced at the service layer (`update_exam_cycle`) and by a database constraint `examcycle_published_requires_verification` (migration `0003_conductingbody_conductingbody_name_trgm_and_more`). Seeded cycles are `is_published=False` and `verified_by_human=False` by design, so calendar and status filters return empty until a human verifies.
+
+## Search
+`q` searches exam name, short name, and conducting body name only — does **not** search descriptions or notification text. Queries under 3 characters use `icontains` on the same three fields; 3 or more use trigram similarity with a threshold of 0.1. Trigram indexes: `exam_name_trgm` (on `Exam.name`) and `conductingbody_name_trgm` (on `ConductingBody.name`). (The jobs domain has a similar gap on `department`; tracked in docs/api_v1_jobs.md.)
+
+## Eligibility Semantics
+Eligibility numbers carry a `source_url`; a null means "not available", never "zero". In particular, `attempts_sc_st = null` means unlimited attempts.
 
 ## Endpoints
 
