@@ -47,3 +47,4 @@ celerybeat-schedule
 
 # Coverage artifacts
 *.zipopencode.json
+.tmp/
