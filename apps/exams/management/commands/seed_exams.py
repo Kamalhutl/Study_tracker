@@ -89,8 +89,8 @@ class Command(BaseCommand):
                             "notification_pdf_url": cyc_data.get("notification_pdf_url", ""),
                             "source_url": cyc_data.get("source_url", ""),
                             "extraction_confidence": cyc_data.get("extraction_confidence", 100),
-                            "verified_by_human": True,
-                            "is_published": True,
+                            "verified_by_human": False,
+                            "is_published": False,
                             "notes": cyc_data.get("notes", ""),
                         },
                     )
@@ -133,28 +133,25 @@ class Command(BaseCommand):
                         ),
                         "nationality_note": elig_data.get("nationality_note", ""),
                         "physical_standards": elig_data.get("physical_standards"),
-                        "verified_by_human": True,
-                        "source_url": elig_data.get("source_url", ""),
+                        "verified_by_human": False,
+                        "source_url": elig_data.get("source_url", item.get("official_url", "")),
                     },
                 )
-        self.stdout.write(
-            f"Created {created} exams, updated {updated}."
-        )  # simplified; real data would be bigger
+        self.stdout.write(f"Created {created} exams, updated {updated}.")
 
     def get_seed_data(self):
-        # Placeholder: return a list of exam dicts. For brevity, we'll include a minimal set.
-        # In reality, we'd have ~45 exams with full details.
-        # For now, return an example to satisfy the command.
-        return [
+        # Twelve exams chosen for search volume and breadth
+        exams = [
             {
                 "slug": "upsc-civil-services",
-                "name": "UPSC Civil Services Examination",
-                "short_name": "CSE",
+                "name": "Civil Services Examination",
+                "short_name": "UPSC CSE",
                 "conducting_body": "Union Public Service Commission",
                 "body_type": BodyType.CENTRAL,
                 "category": ExamCategory.CIVIL_SERVICES,
                 "level": ExamLevel.NATIONAL,
                 "typical_month": 2,
+                "official_url": "https://www.upsc.gov.in/",
                 "cycles": [
                     {
                         "year": 2026,
@@ -165,13 +162,13 @@ class Command(BaseCommand):
                         "application_end": "2026-03-15",
                         "fee_last_date": "2026-03-16",
                         "vacancy_count": 700,
+                        "source_url": "https://www.upsc.gov.in/",
                         "stages": [
                             {
                                 "stage_order": 1,
                                 "name": "Prelims",
                                 "mode": StageMode.ONLINE_CBT,
                                 "date_start": "2026-06-15",
-                                "is_date_tentative": False,
                             },
                             {
                                 "stage_order": 2,
@@ -209,6 +206,229 @@ class Command(BaseCommand):
                     "attempts_pwbd": 9,
                     "min_qualification": "Bachelor's degree",
                     "allow_final_year_appearing": True,
+                    "source_url": "https://www.upsc.gov.in/",
                 },
-            }
+            },
+            {
+                "slug": "ssc-cgl",
+                "name": "Combined Graduate Level Examination",
+                "short_name": "SSC CGL",
+                "conducting_body": "Staff Selection Commission",
+                "body_type": BodyType.CENTRAL,
+                "category": ExamCategory.SSC,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 3,
+                "official_url": "https://ssc.gov.in/",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "2026",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://ssc.gov.in/",
+                        "vacancy_count": 10000,
+                    }
+                ],
+                "eligibility": {"source_url": "https://ssc.gov.in/"},
+            },
+            {
+                "slug": "ssc-chsl",
+                "name": "Combined Higher Secondary Level Examination",
+                "short_name": "SSC CHSL",
+                "conducting_body": "Staff Selection Commission",
+                "body_type": BodyType.CENTRAL,
+                "category": ExamCategory.SSC,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 4,
+                "official_url": "https://ssc.gov.in/",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "2026",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://ssc.gov.in/",
+                    }
+                ],
+                "eligibility": {"source_url": "https://ssc.gov.in/"},
+            },
+            {
+                "slug": "ibps-po",
+                "name": "Probationary Officer",
+                "short_name": "IBPS PO",
+                "conducting_body": "Institute of Banking Personnel Selection",
+                "body_type": BodyType.BANKING,
+                "category": ExamCategory.BANKING,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 8,
+                "official_url": "https://www.ibps.in/",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "2026-27",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://www.ibps.in/",
+                    }
+                ],
+                "eligibility": {"source_url": "https://www.ibps.in/"},
+            },
+            {
+                "slug": "ibps-clerk",
+                "name": "Clerk",
+                "short_name": "IBPS Clerk",
+                "conducting_body": "Institute of Banking Personnel Selection",
+                "body_type": BodyType.BANKING,
+                "category": ExamCategory.BANKING,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 9,
+                "official_url": "https://www.ibps.in/",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "2026-27",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://www.ibps.in/",
+                    }
+                ],
+                "eligibility": {"source_url": "https://www.ibps.in/"},
+            },
+            {
+                "slug": "sbi-po",
+                "name": "Probationary Officer",
+                "short_name": "SBI PO",
+                "conducting_body": "State Bank of India",
+                "body_type": BodyType.BANKING,
+                "category": ExamCategory.BANKING,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 4,
+                "official_url": "https://sbi.bank.in/web/careers",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "2026-27",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://sbi.bank.in/web/careers",
+                    }
+                ],
+                "eligibility": {"source_url": "https://sbi.bank.in/web/careers"},
+            },
+            {
+                "slug": "rrb-ntpc",
+                "name": "Non-Technical Popular Categories",
+                "short_name": "RRB NTPC",
+                "conducting_body": "Railway Recruitment Board",
+                "body_type": BodyType.RAILWAY,
+                "category": ExamCategory.RAILWAY,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 2,
+                "official_url": "https://rrbapply.gov.in/",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "2026",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://rrbapply.gov.in/",
+                    }
+                ],
+                "eligibility": {"source_url": "https://rrbapply.gov.in/"},
+            },
+            {
+                "slug": "ctet",
+                "name": "Central Teacher Eligibility Test",
+                "short_name": "CTET",
+                "conducting_body": "Central Board of Secondary Education",
+                "body_type": BodyType.CENTRAL,
+                "category": ExamCategory.TEACHING,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 7,
+                "official_url": "https://ctet.nic.in/",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "2026",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://ctet.nic.in/",
+                    }
+                ],
+                "eligibility": {"source_url": "https://ctet.nic.in/"},
+            },
+            {
+                "slug": "ugc-net",
+                "name": "UGC NET",
+                "short_name": "UGC NET",
+                "conducting_body": "National Testing Agency",
+                "body_type": BodyType.TESTING_AGENCY,
+                "category": ExamCategory.TEACHING,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 6,
+                "official_url": "https://ugcnet.nta.ac.in/",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "June 2026",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://ugcnet.nta.ac.in/",
+                    }
+                ],
+                "eligibility": {"source_url": "https://ugcnet.nta.ac.in/"},
+            },
+            {
+                "slug": "gate",
+                "name": "Graduate Aptitude Test in Engineering",
+                "short_name": "GATE",
+                "conducting_body": "IISc Bangalore (rotating)",
+                "body_type": BodyType.TESTING_AGENCY,
+                "category": ExamCategory.ENGINEERING,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 2,
+                "official_url": "https://gate.iisc.ac.in/",
+                "cycles": [
+                    {
+                        "year": 2027,
+                        "cycle_label": "2027",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://gate.iisc.ac.in/",
+                    }
+                ],
+                "eligibility": {"source_url": "https://gate.iisc.ac.in/"},
+            },
+            {
+                "slug": "neet-ug",
+                "name": "NEET UG",
+                "short_name": "NEET UG",
+                "conducting_body": "National Testing Agency",
+                "body_type": BodyType.TESTING_AGENCY,
+                "category": ExamCategory.MEDICAL,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 5,
+                "official_url": "https://neet.nta.nic.in/",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "2026",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://neet.nta.nic.in/",
+                    }
+                ],
+                "eligibility": {"source_url": "https://neet.nta.nic.in/"},
+            },
+            {
+                "slug": "jee-main",
+                "name": "JEE Main",
+                "short_name": "JEE Main",
+                "conducting_body": "National Testing Agency",
+                "body_type": BodyType.TESTING_AGENCY,
+                "category": ExamCategory.ENGINEERING,
+                "level": ExamLevel.NATIONAL,
+                "typical_month": 4,
+                "official_url": "https://jeemain.nta.nic.in/",
+                "cycles": [
+                    {
+                        "year": 2026,
+                        "cycle_label": "Session 1",
+                        "status": CycleStatus.ANNOUNCED,
+                        "source_url": "https://jeemain.nta.nic.in/",
+                    }
+                ],
+                "eligibility": {"source_url": "https://jeemain.nta.nic.in/"},
+            },
         ]
+        return exams
