@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+
 from apps.exams.models import ConductingBody, CycleStatus, Exam, ExamCycle
 from tests.factories import UserFactory
 
@@ -117,6 +118,7 @@ class TestCalendar:
             application_start=date(2026, 2, 15),
             application_end=date(2026, 3, 15),
             is_published=True,
+            verified_by_human=True,
         )
         url = reverse("calendar") + "?from=2026-02-01&to=2026-03-31"
         response = client.get(url)
