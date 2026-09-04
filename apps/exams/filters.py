@@ -33,6 +33,7 @@ class ExamFilter(filters.FilterSet):
         return (
             queryset.annotate(
                 sim=TrigramSimilarity("name", value)
+                + TrigramSimilarity("short_name", value)
                 + TrigramSimilarity("conducting_body__name", value)
             )
             .filter(sim__gte=0.1)
@@ -52,8 +53,17 @@ class ExamFilter(filters.FilterSet):
         return queryset.filter(level__in=levels)
 
     def filter_status(self, queryset, name, value):
-        # Filter by latest cycle status
-        return queryset.filter(cycles__status=value, cycles__is_published=True).distinct()
+        # Filter by latest published cycle status
+        from django.db.models import OuterRef, Subquery
+
+        from apps.exams.models import ExamCycle
+
+        latest_status = Subquery(
+            ExamCycle.objects.filter(exam=OuterRef("pk"), is_published=True)
+            .order_by("-year", "-cycle_label")
+            .values("status")[:1]
+        )
+        return queryset.annotate(latest_status=latest_status).filter(latest_status=value)
 
     def filter_applications_open(self, queryset, name, value):
         if value:
@@ -70,7 +80,7 @@ class ExamFilter(filters.FilterSet):
             from datetime import timedelta
 
             now = timezone.now().date()
-            end = now + timedelta(days=value)
+            end = now + timedelta(days=int(value))
             return queryset.filter(
                 Q(cycles__notification_date__range=(now, end))
                 | Q(cycles__application_start__range=(now, end))
