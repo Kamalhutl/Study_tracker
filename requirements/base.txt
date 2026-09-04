@@ -13,4 +13,4 @@ gunicorn>=23.0,<24
 
 scrapling[fetchers]==0.4.14
 nh3==0.3.7
-PyPDF2==3.0.1
+pypdf==4.3.1
