@@ -10,7 +10,7 @@ include .env
 export
 endif
 
-.PHONY: help install up down logs sh migrate makemigrations superuser test-coverage test lint fmt typecheck schema check
+.PHONY: help install up down logs sh migrate makemigrations superuser test-coverage test lint fmt typecheck schema check web-gates web-smoke
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -45,14 +45,14 @@ superuser:  ## Create a superuser (non-interactive when DJANGO_SUPERUSER_EMAIL i
 		python manage.py createsuperuser; \
 	fi
 
-test:  ## Run pytest with coverage
-	DJANGO_SETTINGS_MODULE=config.settings.test $(BIN)/pytest --cov --cov-fail-under=85
-
 lint:  ## ruff check
 	$(BIN)/ruff check .
 
-fmt:  ## black format (write) + ruff format
-	$(BIN)/black . && $(BIN)/ruff check . --fix && $(BIN)/ruff format .
+fmt:  ## black format + ruff fix
+	$(BIN)/black . && $(BIN)/ruff check . --fix
+
+fmt-check:  ## verify formatting without writing
+	$(BIN)/black --check .
 
 typecheck:  ## mypy strict on our code
 	$(BIN)/mypy --config-file pyproject.toml .
@@ -66,10 +66,9 @@ seed-demo:  ## Seed deterministic demo companies/jobs (DEBUG only)
 companies-due:  ## List companies due for scraping
 	python manage.py companies_due
 
-rebuild-search-vectors:  ## Rebuild Job search vectors
-	python manage.py rebuild_search_vectors
 
-gates: lint fmt typecheck migrate-check test  ## Run all gates
+# A gate must verify, never mutate. CI runs gates; a self-fixing gate hides violations.
+gates: lint fmt-check typecheck migrate-check test  ## Run all gates
 check: gates
 
 migrate-check:  ## Check unapplied migrations and missing migrations
@@ -77,4 +76,10 @@ migrate-check:  ## Check unapplied migrations and missing migrations
 	python manage.py migrate --check
 
 test:  ## Run pytest with coverage
-	DJANGO_SETTINGS_MODULE=config.settings.test $(BIN)/pytest --cov --cov-fail-under=85
+	DJANGO_SETTINGS_MODULE=config.settings.test $(BIN)/pytest --cov --cov-fail-under=88
+
+web-gates:  ## Run all web frontend gates (lint, typecheck, test, build)
+	pnpm --dir web lint && pnpm --dir web exec tsc --noEmit && pnpm --dir web test && pnpm --dir web build
+
+web-smoke:  ## End-to-end smoke test: start Django + Next, run 5 assertions
+	bash web/scripts/smoke.sh

@@ -15,7 +15,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "scrape-verified-companies": {
         "task": "scraping.tasks.refresh_all_companies",
-        "schedule": crontab(hour="*/5", minute="2"),
+        "schedule": crontab(minute="*/10"),
         "options": {"queue": "scraping"},
     },
 }

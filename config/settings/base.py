@@ -11,6 +11,7 @@ from . import env as env
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = env("SECRET_KEY", default="dev-only-not-a-real-secret-please-change-me") or ""
+SSR_SERVICE_TOKEN = env("SSR_SERVICE_TOKEN", default="")
 DEBUG = bool(env("DEBUG", default="1", cast_to=int))
 ALLOWED_HOSTS = [
     host.strip()
@@ -47,7 +48,7 @@ LOCAL_APPS = [
     "apps.exams",
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + ["django.contrib.sitemaps"]
 
 # Django 6.0 transitional default: assume https for scheme-less URLs in forms.
 FORMS_URLFIELD_ASSUME_HTTPS = True
@@ -70,7 +71,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -153,7 +154,7 @@ REST_FRAMEWORK = {
     ),
     "EXCEPTION_HANDLER": "core.exceptions.api_exception_handler",
     "DEFAULT_THROTTLE_CLASSES": (
-        "rest_framework.throttling.AnonRateThrottle",
+        "core.throttling.ServiceTokenAnonThrottle",
         "rest_framework.throttling.UserRateThrottle",
         "rest_framework.throttling.ScopedRateThrottle",
     ),
@@ -197,12 +198,18 @@ SPECTACULAR_SETTINGS = {
 # ---------------------------------------------------------------------------
 # CORS
 # ---------------------------------------------------------------------------
+# SSR_SERVICE_TOKEN is server-side only and must never appear in browser-shipped code.
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in (env("CORS_ALLOWED_ORIGINS", default="http://localhost:3000") or "").split(",")
     if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+# ---------------------------------------------------------------------------
+# Site base URL for absolute URLs
+# ---------------------------------------------------------------------------
+SITE_BASE_URL = env("SITE_BASE_URL", default="http://localhost:3000")
 
 # ---------------------------------------------------------------------------
 # Celery (broker/result backend = Redis DB 0)
@@ -219,6 +226,7 @@ CELERY_TASK_DEFAULT_QUEUE = "default"
 CELERY_QUEUES = (
     Queue("default", routing_key="default"),
     Queue("scraping", routing_key="scraping.#"),
+    Queue("scraping_browser", routing_key="scraping_browser.#"),
     Queue("notifications", routing_key="notifications.#"),
 )
 CELERY_TASK_ROUTES = {
@@ -226,8 +234,20 @@ CELERY_TASK_ROUTES = {
     "apps.career_detection.*": {"queue": "scraping"},
     "apps.notifications.*": {"queue": "notifications"},
 }
-# STEP 12: 5-hour scrape cycle goes here
-CELERY_BEAT_SCHEDULE: dict = {}
+SCRAPE_DEFER_DELAY_MINUTES = int(env("SCRAPE_DEFER_DELAY_MINUTES", default="30"))  # type: ignore
+SCRAPE_INTERVAL_MAX_MINUTES = int(env("SCRAPE_INTERVAL_MAX_MINUTES", default="1440"))  # type: ignore
+CELERY_BEAT_SCHEDULE: dict = {
+    "refresh_all_companies": {
+        "task": "scraping.tasks.refresh_all_companies",
+        "schedule": 600.0,
+        "options": {"queue": "scraping"},
+    },
+    "purge_scrape_artifacts": {
+        "task": "scraping.tasks.purge_scrape_artifacts",
+        "schedule": 86400.0,
+        "options": {"queue": "scraping"},
+    },
+}
 
 # ---------------------------------------------------------------------------
 # Fetching (Scrapling wrapper)
@@ -282,6 +302,20 @@ DETECTION_COMMON_PATHS = [
     "/vacancies",
 ]
 DETECTION_FETCH_RATE_PER_DOMAIN = 10
+
+# ---------------------------------------------------------------------------
+# Scraping sanity and retry settings
+# ---------------------------------------------------------------------------
+SCRAPE_SANITY_DROP_RATIO = float(env("SCRAPE_SANITY_DROP_RATIO", default="0.5"))  # type: ignore
+SCRAPE_SANITY_MIN_BASELINE = int(env("SCRAPE_SANITY_MIN_BASELINE", default="5"))  # type: ignore
+SCRAPE_MAX_RETRIES = int(env("SCRAPE_MAX_RETRIES", default="3"))  # type: ignore
+SCRAPE_SOFT_TIME_LIMIT = int(env("SCRAPE_SOFT_TIME_LIMIT", default="300"))  # type: ignore
+SCRAPE_TIME_LIMIT = int(env("SCRAPE_TIME_LIMIT", default="360"))  # type: ignore
+SCRAPE_ARTIFACT_RETENTION_DAYS = int(env("SCRAPE_ARTIFACT_RETENTION_DAYS", default="14"))  # type: ignore
+# Conditional GET: enable/disable sending conditional headers (ETag/Last-Modified)
+SCRAPE_CONDITIONAL_GET_ENABLED = bool(
+    env("SCRAPE_CONDITIONAL_GET_ENABLED", default="1", cast_to=int)
+)
 
 # ---------------------------------------------------------------------------
 # Logging (JSON to stdout, request_id on every record)

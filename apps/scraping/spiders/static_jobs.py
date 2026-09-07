@@ -7,6 +7,8 @@ from apps.scraping.fetching import FetchResult
 from core.utils import normalize_url
 
 logger = logging.getLogger("study_tracker.scraping.spiders.static_jobs")
+PARSER_NAME = "static"
+PARSER_VERSION = 1
 
 # Noise tokens to exclude from hrefs
 NOISE_TOKENS = [

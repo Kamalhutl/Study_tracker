@@ -172,7 +172,6 @@ class TestCompanyProperties:
         assert company.is_due(now) is False
 
     def test_compute_next_scrape_at_spread(self):
-
         companies = [
             CompanyFactory(slug=f"jitter-{i}", scrape_interval_minutes=300) for i in range(200)
         ]

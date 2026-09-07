@@ -74,6 +74,7 @@ class FakeResponse:
         self.Anchors = anchors or []
         self.text = text
         self.Scripts = scripts or []
+        self.headers = {}
 
     def css(self, sel: str) -> _CssList:
         if sel == "a" or sel.endswith(" a") or " a " in sel:
@@ -105,6 +106,8 @@ def _rich_response(url: str = "https://co.example/careers") -> FakeResponse:
 
 @override_settings(FETCH_ROBOTS_OBEY=False, FETCH_PER_DOMAIN_RATE=100)
 class FetchTests(SimpleTestCase):
+    databases = {"default"}
+
     def test_fetch_ok_maps_response(self) -> None:
         with patch("apps.scraping.fetching._http_get", return_value=_rich_response()):
             result = fetch("https://co.example/careers")
@@ -185,6 +188,8 @@ class FetchTests(SimpleTestCase):
 
 @override_settings(FETCH_ROBOTS_OBEY=False, FETCH_PER_DOMAIN_RATE=100, FETCH_ALLOW_DYNAMIC=True)
 class EscalationTests(SimpleTestCase):
+    databases = {"default"}
+
     def test_rich_page_stays_http(self) -> None:
         # A rich page must not escalate; disable dynamic here so no browser is
         # ever launched (global socket guard forbids outbound network in tests).
@@ -239,6 +244,8 @@ class EscalationTests(SimpleTestCase):
 
 @override_settings(FETCH_ROBOTS_OBEY=False, FETCH_PER_DOMAIN_RATE=100)
 class HeadOkTests(SimpleTestCase):
+    databases = {"default"}
+
     def test_2xx_ok(self) -> None:
         with patch(
             "apps.scraping.fetching._http_get",
@@ -264,6 +271,7 @@ class HeadOkTests(SimpleTestCase):
 
 @override_settings(FETCH_ROBOTS_OBEY=False, FETCH_PER_DOMAIN_RATE=100)
 class FetchResultTests(SimpleTestCase):
+    databases = {"default"}
     """Tests for FetchResult methods: links, title, text, json_ld, region_links, _abs."""
 
     def _make_result(self, body: str = "", anchors=None, text: str = "") -> FetchResult:
@@ -468,6 +476,7 @@ class FetchResultTests(SimpleTestCase):
 
 @override_settings(FETCH_ROBOTS_OBEY=False, FETCH_PER_DOMAIN_RATE=100)
 class HelperFunctionTests(SimpleTestCase):
+    databases = {"default"}
     """Tests for internal helper functions _classify, _user_agent, _proxy_for, etc."""
 
     def test_classify_passthrough_fetch_error(self) -> None:
@@ -561,6 +570,7 @@ class HelperFunctionTests(SimpleTestCase):
 
 @override_settings(FETCH_ROBOTS_OBEY=False, FETCH_PER_DOMAIN_RATE=100, FETCH_ALLOW_DYNAMIC=True)
 class FetchModeTests(SimpleTestCase):
+    databases = {"default"}
     """Tests for fetch() with different modes."""
 
     @patch(
@@ -601,6 +611,7 @@ class FetchModeTests(SimpleTestCase):
 
 @override_settings(FETCH_ROBOTS_OBEY=False, FETCH_PER_DOMAIN_RATE=100)
 class HeadOkExtraTests(SimpleTestCase):
+    databases = {"default"}
     """Extra edge-case tests for head_ok()."""
 
     @override_settings(FETCH_ROBOTS_OBEY=True)
@@ -622,6 +633,7 @@ class HeadOkExtraTests(SimpleTestCase):
 
 
 class FetchRobotsRawTests(SimpleTestCase):
+    databases = {"default"}
     """Tests for fetch_robots_raw()."""
 
     @override_settings(FETCH_ROBOTS_OBEY=False, FETCH_PER_DOMAIN_RATE=100)

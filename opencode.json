@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "xkiro-1/deepseek/deepseek-v4-pro",
   "provider": {
     "xkiro-1": {
       "npm": "@ai-sdk/openai-compatible",
@@ -9,21 +10,14 @@
         "apiKey": "{env:XKIRO_API_KEY_1}"
       },
       "models": {
-        "qwen/qwen3-coder-plus:free": {
-          "name": "Qwen3 Coder Plus (Free)"
+        "deepseek/deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Free)"
         },
-        "mistralai/devstral-medium": {
-          "name": "Devstral 2 (Free)"
-        },
-        "openai/gpt-5.3-codex-spark": {
-          "name": "Codex 5.3 Spark (Free)"
-        },
-        "deepseek/deepseek-v3.2": {
-          "name": "DeepSeek V3.2 (Free)"
+        "qwen/qwen3.8-max:free": {
+          "name": "Qwen3.8 Max (Free)"
         }
       }
     },
-
     "xkiro-2": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "xKiro 2",
@@ -32,21 +26,14 @@
         "apiKey": "{env:XKIRO_API_KEY_2}"
       },
       "models": {
-        "qwen/qwen3-coder-plus:free": {
-          "name": "Qwen3 Coder Plus (Free)"
+        "deepseek/deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Free)"
         },
-        "mistralai/devstral-medium": {
-          "name": "Devstral 2 (Free)"
-        },
-        "openai/gpt-5.3-codex-spark": {
-          "name": "Codex 5.3 Spark (Free)"
-        },
-        "deepseek/deepseek-v3.2": {
-          "name": "DeepSeek V3.2 (Free)"
+        "qwen/qwen3.8-max:free": {
+          "name": "Qwen3.8 Max (Free)"
         }
       }
     },
-
     "xkiro-3": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "xKiro 3",
@@ -55,21 +42,14 @@
         "apiKey": "{env:XKIRO_API_KEY_3}"
       },
       "models": {
-        "qwen/qwen3-coder-plus:free": {
-          "name": "Qwen3 Coder Plus (Free)"
+        "deepseek/deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Free)"
         },
-        "mistralai/devstral-medium": {
-          "name": "Devstral 2 (Free)"
-        },
-        "openai/gpt-5.3-codex-spark": {
-          "name": "Codex 5.3 Spark (Free)"
-        },
-        "deepseek/deepseek-v3.2": {
-          "name": "DeepSeek V3.2 (Free)"
+        "qwen/qwen3.8-max:free": {
+          "name": "Qwen3.8 Max (Free)"
         }
       }
     },
-
     "xkiro-4": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "xKiro 4",
@@ -78,21 +58,14 @@
         "apiKey": "{env:XKIRO_API_KEY_4}"
       },
       "models": {
-        "qwen/qwen3-coder-plus:free": {
-          "name": "Qwen3 Coder Plus (Free)"
+        "deepseek/deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Free)"
         },
-        "mistralai/devstral-medium": {
-          "name": "Devstral 2 (Free)"
-        },
-        "openai/gpt-5.3-codex-spark": {
-          "name": "Codex 5.3 Spark (Free)"
-        },
-        "deepseek/deepseek-v3.2": {
-          "name": "DeepSeek V3.2 (Free)"
+        "qwen/qwen3.8-max:free": {
+          "name": "Qwen3.8 Max (Free)"
         }
       }
     },
-
     "xkiro-5": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "xKiro 5",
@@ -101,21 +74,14 @@
         "apiKey": "{env:XKIRO_API_KEY_5}"
       },
       "models": {
-        "qwen/qwen3-coder-plus:free": {
-          "name": "Qwen3 Coder Plus (Free)"
+        "deepseek/deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Free)"
         },
-        "mistralai/devstral-medium": {
-          "name": "Devstral 2 (Free)"
-        },
-        "openai/gpt-5.3-codex-spark": {
-          "name": "Codex 5.3 Spark (Free)"
-        },
-        "deepseek/deepseek-v3.2": {
-          "name": "DeepSeek V3.2 (Free)"
+        "qwen/qwen3.8-max:free": {
+          "name": "Qwen3.8 Max (Free)"
         }
       }
     },
-
     "xkiro-6": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "xKiro 6",
@@ -124,21 +90,14 @@
         "apiKey": "{env:XKIRO_API_KEY_6}"
       },
       "models": {
-        "qwen/qwen3-coder-plus:free": {
-          "name": "Qwen3 Coder Plus (Free)"
+        "deepseek/deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Free)"
         },
-        "mistralai/devstral-medium": {
-          "name": "Devstral 2 (Free)"
-        },
-        "openai/gpt-5.3-codex-spark": {
-          "name": "Codex 5.3 Spark (Free)"
-        },
-        "deepseek/deepseek-v3.2": {
-          "name": "DeepSeek V3.2 (Free)"
+        "qwen/qwen3.8-max:free": {
+          "name": "Qwen3.8 Max (Free)"
         }
       }
     },
-
     "xkiro-7": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "xKiro 7",
@@ -147,17 +106,43 @@
         "apiKey": "{env:XKIRO_API_KEY_7}"
       },
       "models": {
-        "qwen/qwen3-coder-plus:free": {
-          "name": "Qwen3 Coder Plus (Free)"
+        "deepseek/deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Free)"
         },
-        "mistralai/devstral-medium": {
-          "name": "Devstral 2 (Free)"
+        "qwen/qwen3.8-max:free": {
+          "name": "Qwen3.8 Max (Free)"
+        }
+      }
+    },
+    "xkiro-8": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "xKiro 8",
+      "options": {
+        "baseURL": "https://api.xkiro.com/v1",
+        "apiKey": "{env:XKIRO_API_KEY_8}"
+      },
+      "models": {
+        "deepseek/deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Free)"
         },
-        "openai/gpt-5.3-codex-spark": {
-          "name": "Codex 5.3 Spark (Free)"
+        "qwen/qwen3.8-max:free": {
+          "name": "Qwen3.8 Max (Free)"
+        }
+      }
+    },
+    "xkiro-9": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "xKiro 9",
+      "options": {
+        "baseURL": "https://api.xkiro.com/v1",
+        "apiKey": "{env:XKIRO_API_KEY_9}"
+      },
+      "models": {
+        "deepseek/deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Free)"
         },
-        "deepseek/deepseek-v3.2": {
-          "name": "DeepSeek V3.2 (Free)"
+        "qwen/qwen3.8-max:free": {
+          "name": "Qwen3.8 Max (Free)"
         }
       }
     }

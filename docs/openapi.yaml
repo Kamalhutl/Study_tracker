@@ -177,6 +177,647 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserMe'
           description: ''
+  /api/v1/companies/:
+    get:
+      operationId: api_v1_companies_list
+      parameters:
+      - in: query
+        name: has_open_jobs
+        schema:
+          type: boolean
+      - in: query
+        name: industry
+        schema:
+          type: string
+      - in: query
+        name: ordering
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Search
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCompanyListList'
+          description: ''
+  /api/v1/companies/{slug}/:
+    get:
+      operationId: api_v1_companies_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyDetail'
+          description: ''
+  /api/v1/companies/{slug}/jobs/:
+    get:
+      operationId: api_v1_companies_jobs_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJobListList'
+          description: ''
+  /api/v1/exams/:
+    get:
+      operationId: api_v1_exams_list
+      parameters:
+      - in: query
+        name: allow_final_year
+        schema:
+          type: boolean
+      - in: query
+        name: applications_open
+        schema:
+          type: boolean
+      - in: query
+        name: body
+        schema:
+          type: string
+      - in: query
+        name: category
+        schema:
+          type: string
+      - in: query
+        name: level
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Search (trigram)
+      - in: query
+        name: status
+        schema:
+          type: string
+      - in: query
+        name: upcoming_within_days
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedExamListList'
+          description: ''
+  /api/v1/exams/{slug}/:
+    get:
+      operationId: api_v1_exams_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExamDetail'
+          description: ''
+  /api/v1/exams/{slug}/save/:
+    post:
+      operationId: api_v1_exams_save_create
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_v1_exams_save_destroy
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/exams/calendar/:
+    get:
+      operationId: api_v1_exams_calendar_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEvent'
+          description: ''
+  /api/v1/exams/cycles/:
+    get:
+      operationId: api_v1_exams_cycles_list
+      parameters:
+      - in: query
+        name: exam
+        schema:
+          type: string
+          format: uuid
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - admit_card_out
+          - announced
+          - applications_closed
+          - applications_open
+          - cancelled
+          - exam_conducted
+          - notification_out
+          - postponed
+          - result_out
+        description: |-
+          * `announced` - Announced
+          * `notification_out` - Notification Out
+          * `applications_open` - Applications Open
+          * `applications_closed` - Applications Closed
+          * `admit_card_out` - Admit Card Out
+          * `exam_conducted` - Exam Conducted
+          * `result_out` - Result Out
+          * `cancelled` - Cancelled
+          * `postponed` - Postponed
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedExamCycleList'
+          description: ''
+  /api/v1/exams/cycles/{id}/:
+    get:
+      operationId: api_v1_exams_cycles_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExamCycle'
+          description: ''
+  /api/v1/exams/saved/:
+    get:
+      operationId: api_v1_exams_saved_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedExamListList'
+          description: ''
+  /api/v1/jobs/:
+    get:
+      operationId: api_v1_jobs_list
+      parameters:
+      - in: query
+        name: company
+        schema:
+          type: array
+          items:
+            type: string
+        description: Company slug
+      - in: query
+        name: department
+        schema:
+          type: string
+        description: icontains
+      - in: query
+        name: has_apply_url
+        schema:
+          type: boolean
+        description: Boolean
+      - in: query
+        name: job_type
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multi-value
+      - in: query
+        name: location
+        schema:
+          type: string
+        description: icontains
+      - in: query
+        name: ordering
+        schema:
+          type: string
+        description: posted_at, -posted_at, created_at, -created_at, title
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: posted_after
+        schema:
+          type: string
+        description: ISO date
+      - in: query
+        name: posted_within_days
+        schema:
+          type: integer
+        description: Integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Search
+      - in: query
+        name: work_mode
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multi-value
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJobListList'
+          description: ''
+  /api/v1/jobs/{id}/:
+    get:
+      operationId: api_v1_jobs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetail'
+          description: ''
+  /api/v1/jobs/{id}/report/:
+    post:
+      operationId: api_v1_jobs_report_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobReportRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobReportRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobReportRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobReport'
+          description: ''
+        '400':
+          description: Validation error
+  /api/v1/jobs/{id}/save/:
+    post:
+      operationId: api_v1_jobs_save_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaveResponse'
+          description: ''
+    delete:
+      operationId: api_v1_jobs_save_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/jobs/by-slug/{slug}/:
+    get:
+      operationId: api_v1_jobs_by_slug_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetail'
+          description: ''
+  /api/v1/jobs/facets/:
+    get:
+      operationId: api_v1_jobs_facets_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacetsResponse'
+          description: ''
+  /api/v1/jobs/saved/:
+    get:
+      operationId: api_v1_jobs_saved_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSavedJobList'
+          description: ''
   /healthz:
     get:
       operationId: healthz_retrieve
@@ -207,20 +848,237 @@ components:
     BlankEnum:
       enum:
       - ''
-    CategoryEnum:
+    BodyTypeEnum:
       enum:
-      - GEN
-      - OBC
-      - SC
-      - ST
-      - EWS
+      - central
+      - state
+      - banking
+      - railway
+      - defence
+      - testing_agency
       type: string
       description: |-
-        * `GEN` - General
-        * `OBC` - OBC
-        * `SC` - SC
-        * `ST` - ST
-        * `EWS` - EWS
+        * `central` - Central
+        * `state` - State
+        * `banking` - Banking
+        * `railway` - Railway
+        * `defence` - Defence
+        * `testing_agency` - Testing Agency
+    CalendarEvent:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        event_type:
+          type: string
+        exam_name:
+          type: string
+        exam_slug:
+          type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        cycle_label:
+          type: string
+        stage_name:
+          type: string
+          nullable: true
+        is_tentative:
+          type: boolean
+        official_url:
+          type: string
+          format: uri
+      required:
+      - cycle_label
+      - date
+      - event_type
+      - exam_name
+      - exam_slug
+      - is_tentative
+      - official_url
+      - stage_name
+    Category185Enum:
+      enum:
+      - civil_services
+      - banking
+      - railway
+      - ssc
+      - teaching
+      - defence
+      - engineering
+      - medical
+      - law
+      - state_psc
+      - other
+      type: string
+      description: |-
+        * `civil_services` - Civil Services
+        * `banking` - Banking
+        * `railway` - Railway
+        * `ssc` - SSC
+        * `teaching` - Teaching
+        * `defence` - Defence
+        * `engineering` - Engineering
+        * `medical` - Medical
+        * `law` - Law
+        * `state_psc` - State PSC
+        * `other` - Other
+    CompanyDetail:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 280
+          pattern: ^[-a-zA-Z0-9_]+$
+        domain:
+          type: string
+          maxLength: 255
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 500
+        industry:
+          type: string
+          maxLength: 120
+        hq_location:
+          type: string
+          maxLength: 255
+        size_bucket:
+          type: string
+          maxLength: 40
+        open_jobs_count:
+          type: integer
+          readOnly: true
+        description:
+          type: string
+        linkedin_url:
+          type: string
+          format: uri
+          maxLength: 500
+        career_url:
+          type: string
+          format: uri
+          maxLength: 1000
+        is_verified:
+          type: boolean
+        last_checked_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - domain
+      - last_checked_at
+      - name
+      - open_jobs_count
+      - slug
+    CompanyFacet:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        count:
+          type: integer
+      required:
+      - count
+      - name
+      - slug
+    CompanyList:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 280
+          pattern: ^[-a-zA-Z0-9_]+$
+        domain:
+          type: string
+          maxLength: 255
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 500
+        industry:
+          type: string
+          maxLength: 120
+        hq_location:
+          type: string
+          maxLength: 255
+        size_bucket:
+          type: string
+          maxLength: 40
+        open_jobs_count:
+          type: integer
+          readOnly: true
+      required:
+      - domain
+      - name
+      - open_jobs_count
+      - slug
+    CompanyNested:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 280
+          pattern: ^[-a-zA-Z0-9_]+$
+        domain:
+          type: string
+          maxLength: 255
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 500
+      required:
+      - domain
+      - id
+      - name
+      - slug
+    ConductingBody:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        short_name:
+          type: string
+          maxLength: 50
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        body_type:
+          $ref: '#/components/schemas/BodyTypeEnum'
+        state:
+          type: string
+          maxLength: 100
+        website:
+          type: string
+          format: uri
+          maxLength: 200
+        is_active:
+          type: boolean
+      required:
+      - body_type
+      - id
+      - name
+      - slug
     CustomTokenObtainPairRequest:
       type: object
       description: Adds ``role`` + ``email`` claims and tracks login metadata.
@@ -236,6 +1094,402 @@ components:
       required:
       - email
       - password
+    DepartmentFacet:
+      type: object
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+      required:
+      - count
+      - name
+    DetectedByEnum:
+      enum:
+      - scrape
+      - human
+      - corrigendum
+      type: string
+      description: |-
+        * `scrape` - Scrape
+        * `human` - Human
+        * `corrigendum` - Corrigendum
+    ExamCycle:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        cycle_label:
+          type: string
+          maxLength: 50
+        status:
+          $ref: '#/components/schemas/ExamCycleStatusEnum'
+        notification_date:
+          type: string
+          format: date
+          nullable: true
+        application_start:
+          type: string
+          format: date
+          nullable: true
+        application_end:
+          type: string
+          format: date
+          nullable: true
+        fee_last_date:
+          type: string
+          format: date
+          nullable: true
+        correction_window_start:
+          type: string
+          format: date
+          nullable: true
+        correction_window_end:
+          type: string
+          format: date
+          nullable: true
+        result_date:
+          type: string
+          format: date
+          nullable: true
+        vacancy_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        official_notification_url:
+          type: string
+          format: uri
+          maxLength: 200
+        notification_pdf_url:
+          type: string
+          format: uri
+          maxLength: 200
+        source_url:
+          type: string
+          format: uri
+          maxLength: 200
+        extraction_confidence:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        verified_by_human:
+          type: boolean
+        is_published:
+          type: boolean
+        notes:
+          type: string
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExamStage'
+          readOnly: true
+        date_changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExamDateChange'
+          readOnly: true
+      required:
+      - cycle_label
+      - date_changes
+      - id
+      - stages
+      - status
+      - year
+    ExamCycleStatusEnum:
+      enum:
+      - announced
+      - notification_out
+      - applications_open
+      - applications_closed
+      - admit_card_out
+      - exam_conducted
+      - result_out
+      - cancelled
+      - postponed
+      type: string
+      description: |-
+        * `announced` - Announced
+        * `notification_out` - Notification Out
+        * `applications_open` - Applications Open
+        * `applications_closed` - Applications Closed
+        * `admit_card_out` - Admit Card Out
+        * `exam_conducted` - Exam Conducted
+        * `result_out` - Result Out
+        * `cancelled` - Cancelled
+        * `postponed` - Postponed
+    ExamDateChange:
+      type: object
+      properties:
+        field_name:
+          type: string
+          maxLength: 50
+        old_value:
+          type: string
+        new_value:
+          type: string
+        changed_at:
+          type: string
+          format: date-time
+          readOnly: true
+        detected_by:
+          $ref: '#/components/schemas/DetectedByEnum'
+        note:
+          type: string
+      required:
+      - changed_at
+      - detected_by
+      - field_name
+      - new_value
+      - old_value
+    ExamDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 255
+        short_name:
+          type: string
+          maxLength: 50
+        conducting_body:
+          allOf:
+          - $ref: '#/components/schemas/ConductingBody'
+          readOnly: true
+        category:
+          $ref: '#/components/schemas/Category185Enum'
+        level:
+          $ref: '#/components/schemas/LevelEnum'
+        description:
+          type: string
+        official_url:
+          type: string
+          format: uri
+          maxLength: 200
+        typical_month:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        is_active:
+          type: boolean
+        cycles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExamCycle'
+          readOnly: true
+        eligibility:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExamEligibility'
+          readOnly: true
+      required:
+      - category
+      - conducting_body
+      - cycles
+      - eligibility
+      - id
+      - level
+      - name
+      - slug
+    ExamEligibility:
+      type: object
+      properties:
+        min_age:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        max_age:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        age_as_on_date:
+          type: string
+          format: date
+          nullable: true
+        age_relaxation: {}
+        attempts_general:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        attempts_obc:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        attempts_sc_st:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        attempts_pwbd:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        min_qualification:
+          type: string
+        allow_final_year_appearing:
+          type: boolean
+        nationality_note:
+          type: string
+        physical_standards:
+          nullable: true
+        verified_by_human:
+          type: boolean
+    ExamList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 255
+        short_name:
+          type: string
+          maxLength: 50
+        conducting_body:
+          allOf:
+          - $ref: '#/components/schemas/ConductingBody'
+          readOnly: true
+        category:
+          $ref: '#/components/schemas/Category185Enum'
+        level:
+          $ref: '#/components/schemas/LevelEnum'
+        official_url:
+          type: string
+          format: uri
+          maxLength: 200
+        typical_month:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        is_active:
+          type: boolean
+        latest_cycle_status:
+          type: string
+          nullable: true
+          readOnly: true
+      required:
+      - category
+      - conducting_body
+      - id
+      - latest_cycle_status
+      - level
+      - name
+      - slug
+    ExamStage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        stage_order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        mode:
+          $ref: '#/components/schemas/ModeEnum'
+        date_start:
+          type: string
+          format: date
+          nullable: true
+        date_end:
+          type: string
+          format: date
+          nullable: true
+        is_date_tentative:
+          type: boolean
+        admit_card_date:
+          type: string
+          format: date
+          nullable: true
+        city_intimation_date:
+          type: string
+          format: date
+          nullable: true
+        result_date:
+          type: string
+          format: date
+          nullable: true
+        duration_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        total_marks:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        negative_marking:
+          type: string
+        is_qualifying_only:
+          type: boolean
+      required:
+      - id
+      - mode
+      - name
+      - stage_order
+    ExperienceLevelEnum:
+      enum:
+      - fresher
+      - entry
+      - mid
+      - senior
+      - lead
+      - unknown
+      type: string
+      description: |-
+        * `fresher` - Fresher
+        * `entry` - Entry
+        * `mid` - Mid
+        * `senior` - Senior
+        * `lead` - Lead
+        * `unknown` - Unknown
+    FacetsResponse:
+      type: object
+      properties:
+        work_mode:
+          $ref: '#/components/schemas/WorkModeFacet'
+        job_type:
+          $ref: '#/components/schemas/JobTypeFacet'
+        company:
+          $ref: '#/components/schemas/CompanyFacet'
+        department:
+          $ref: '#/components/schemas/DepartmentFacet'
+      required:
+      - company
+      - department
+      - job_type
+      - work_mode
     FcmToken:
       type: object
       properties:
@@ -253,6 +1507,355 @@ components:
           maxLength: 255
       required:
       - fcm_token
+    JobDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          nullable: true
+          maxLength: 320
+          pattern: ^[-a-zA-Z0-9_]+$
+        title:
+          type: string
+          maxLength: 500
+        company:
+          allOf:
+          - $ref: '#/components/schemas/CompanyNested'
+          readOnly: true
+        location_raw:
+          type: string
+          maxLength: 500
+        work_mode:
+          $ref: '#/components/schemas/WorkModeEnum'
+        job_type:
+          $ref: '#/components/schemas/JobTypeEnum'
+        department:
+          type: string
+          maxLength: 200
+        posted_at:
+          type: string
+          format: date-time
+          nullable: true
+        apply_url:
+          type: string
+          format: uri
+          maxLength: 1000
+        is_saved:
+          type: string
+          readOnly: true
+        description:
+          type: string
+        description_html_sanitized:
+          type: string
+          readOnly: true
+        source_url:
+          type: string
+          format: uri
+          maxLength: 1000
+        experience_level:
+          $ref: '#/components/schemas/ExperienceLevelEnum'
+        extraction_confidence:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        scraped_at:
+          type: string
+          format: date-time
+          readOnly: true
+        canonical_url:
+          type: string
+          readOnly: true
+        structured_data:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+      required:
+      - canonical_url
+      - company
+      - description_html_sanitized
+      - id
+      - is_saved
+      - scraped_at
+      - source_url
+      - structured_data
+      - title
+    JobList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          nullable: true
+          maxLength: 320
+          pattern: ^[-a-zA-Z0-9_]+$
+        title:
+          type: string
+          maxLength: 500
+        company:
+          allOf:
+          - $ref: '#/components/schemas/CompanyNested'
+          readOnly: true
+        location_raw:
+          type: string
+          maxLength: 500
+        work_mode:
+          $ref: '#/components/schemas/WorkModeEnum'
+        job_type:
+          $ref: '#/components/schemas/JobTypeEnum'
+        department:
+          type: string
+          maxLength: 200
+        posted_at:
+          type: string
+          format: date-time
+          nullable: true
+        apply_url:
+          type: string
+          format: uri
+          maxLength: 1000
+        is_saved:
+          type: string
+          readOnly: true
+      required:
+      - company
+      - id
+      - is_saved
+      - title
+    JobReport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        reason:
+          $ref: '#/components/schemas/ReasonEnum'
+        detail:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/JobReportStatusEnum'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - reason
+      - status
+    JobReportRequest:
+      type: object
+      properties:
+        reason:
+          $ref: '#/components/schemas/ReasonEnum'
+        detail:
+          type: string
+      required:
+      - reason
+    JobReportStatusEnum:
+      enum:
+      - open
+      - reviewing
+      - resolved
+      - rejected
+      type: string
+      description: |-
+        * `open` - Open
+        * `reviewing` - Reviewing
+        * `resolved` - Resolved
+        * `rejected` - Rejected
+    JobTypeEnum:
+      enum:
+      - full_time
+      - part_time
+      - internship
+      - contract
+      - temporary
+      - freelance
+      - unknown
+      type: string
+      description: |-
+        * `full_time` - Full Time
+        * `part_time` - Part Time
+        * `internship` - Internship
+        * `contract` - Contract
+        * `temporary` - Temporary
+        * `freelance` - Freelance
+        * `unknown` - Unknown
+    JobTypeFacet:
+      type: object
+      properties:
+        full_time:
+          type: integer
+        part_time:
+          type: integer
+        contract:
+          type: integer
+        internship:
+          type: integer
+        temporary:
+          type: integer
+        freelance:
+          type: integer
+        unknown:
+          type: integer
+      required:
+      - contract
+      - freelance
+      - full_time
+      - internship
+      - part_time
+      - temporary
+      - unknown
+    LevelEnum:
+      enum:
+      - national
+      - state
+      type: string
+      description: |-
+        * `national` - National
+        * `state` - State
+    ModeEnum:
+      enum:
+      - online_cbt
+      - offline_omr
+      - descriptive
+      - interview
+      - physical
+      - document
+      type: string
+      description: |-
+        * `online_cbt` - Online CBT
+        * `offline_omr` - Offline OMR
+        * `descriptive` - Descriptive
+        * `interview` - Interview
+        * `physical` - Physical
+        * `document` - Document
+    PaginatedCompanyListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyList'
+    PaginatedExamCycleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExamCycle'
+    PaginatedExamListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExamList'
+    PaginatedJobListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobList'
+    PaginatedSavedJobList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SavedJob'
     PasswordChangeRequest:
       type: object
       properties:
@@ -272,6 +1875,22 @@ components:
       - new_password
       - new_password2
       - old_password
+    ReasonEnum:
+      enum:
+      - expired
+      - broken_link
+      - wrong_details
+      - duplicate
+      - spam
+      - other
+      type: string
+      description: |-
+        * `expired` - Expired
+        * `broken_link` - Broken Link
+        * `wrong_details` - Wrong Details
+        * `duplicate` - Duplicate
+        * `spam` - Spam
+        * `other` - Other
     RegisterRequest:
       type: object
       properties:
@@ -325,6 +1944,34 @@ components:
           minLength: 1
       required:
       - refresh
+    SaveResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    SavedJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        job:
+          allOf:
+          - $ref: '#/components/schemas/JobList'
+          readOnly: true
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - job
     UserMe:
       type: object
       properties:
@@ -359,7 +2006,7 @@ components:
           maxLength: 80
         category:
           oneOf:
-          - $ref: '#/components/schemas/CategoryEnum'
+          - $ref: '#/components/schemas/UserMeCategoryEnum'
           - $ref: '#/components/schemas/BlankEnum'
         state:
           type: string
@@ -384,6 +2031,48 @@ components:
       - email_verified_at
       - id
       - role
+    UserMeCategoryEnum:
+      enum:
+      - GEN
+      - OBC
+      - SC
+      - ST
+      - EWS
+      type: string
+      description: |-
+        * `GEN` - General
+        * `OBC` - OBC
+        * `SC` - SC
+        * `ST` - ST
+        * `EWS` - EWS
+    WorkModeEnum:
+      enum:
+      - onsite
+      - remote
+      - hybrid
+      - unknown
+      type: string
+      description: |-
+        * `onsite` - Onsite
+        * `remote` - Remote
+        * `hybrid` - Hybrid
+        * `unknown` - Unknown
+    WorkModeFacet:
+      type: object
+      properties:
+        onsite:
+          type: integer
+        remote:
+          type: integer
+        hybrid:
+          type: integer
+        unknown:
+          type: integer
+      required:
+      - hybrid
+      - onsite
+      - remote
+      - unknown
   securitySchemes:
     jwtAuth:
       type: http

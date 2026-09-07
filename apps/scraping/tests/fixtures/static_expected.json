@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Software Engineer",
+    "source_url": "https://example.com/jobs/1",
+    "apply_url": "https://example.com/jobs/1",
+    "source_job_id": "",
+    "location_raw": "",
+    "description": "",
+    "description_html": "",
+    "department": "",
+    "job_type": "",
+    "work_mode": "",
+    "experience_level": "",
+    "posted_at": null,
+    "extraction_confidence": 40
+  },
+  {
+    "title": "Product Manager",
+    "source_url": "https://example.com/jobs/2",
+    "apply_url": "https://example.com/jobs/2",
+    "source_job_id": "",
+    "location_raw": "",
+    "description": "",
+    "description_html": "",
+    "department": "",
+    "job_type": "",
+    "work_mode": "",
+    "experience_level": "",
+    "posted_at": null,
+    "extraction_confidence": 40
+  }
+]

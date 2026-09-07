@@ -5,6 +5,8 @@ from apps.companies.models import Company
 from apps.scraping.fetching import FetchResult
 
 logger = logging.getLogger("study_tracker.scraping.parsers.smartrecruiters")
+PARSER_NAME = "smartrecruiters"
+PARSER_VERSION = 1
 
 
 def parse(fetch_result: FetchResult, *, company: Company) -> list[dict[str, Any]]:

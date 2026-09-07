@@ -33,6 +33,20 @@
       <p>Due now: <strong>{{ due_now_count }}</strong></p>
       <p>Next scrape: {{ next_scrape_at|default:"—" }}</p>
     </div>
+    <div style="border:1px solid #ccc;border-radius:6px;padding:1rem;min-width:180px">
+      <h3>Unchanged rate (7d)</h3>
+      <p><strong>{{ unchanged_rate_7d }}</strong> ({{ unchanged_rate_7d_detail }})</p>
+    </div>
+    <div style="border:1px solid #ccc;border-radius:6px;padding:1rem;min-width:180px">
+      <h3>Parse rate (7d)</h3>
+      <ul>
+        {% for item in parse_rate_data %}
+          <li>{{ item.parser_version }}: {{ item.count }} runs</li>
+        {% empty %}
+          <li>No data</li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
   <div id="content-related" style="width:100%">
     <div class="module" style="padding:0 1rem">

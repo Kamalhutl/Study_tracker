@@ -1,0 +1,32 @@
+[
+  {
+    "source_job_id": "xyz-789",
+    "source_url": "https://jobs.ashbyhq.com/acme/xyz-789",
+    "apply_url": "https://jobs.ashbyhq.com/acme/xyz-789/application",
+    "title": "Product Designer",
+    "location_raw": "New York, NY",
+    "description": "We are looking for a Product Designer to create amazing user experiences.",
+    "description_html": "<p>We are looking for a Product Designer to create amazing user experiences.</p>",
+    "department": "Design",
+    "job_type": "full_time",
+    "work_mode": "",
+    "experience_level": "",
+    "posted_at": "2025-02-01T00:00:00+00:00",
+    "extraction_confidence": 90
+  },
+  {
+    "source_job_id": "mno-321",
+    "source_url": "https://jobs.ashbyhq.com/acme/mno-321",
+    "apply_url": "https://jobs.ashbyhq.com/acme/mno-321/application",
+    "title": "UX Researcher",
+    "location_raw": "Remote",
+    "description": "UX Researcher role to understand user needs.",
+    "description_html": "<p>UX Researcher role to understand user needs.</p>",
+    "department": "Research",
+    "job_type": "full_time",
+    "work_mode": "remote",
+    "experience_level": "",
+    "posted_at": "2025-01-30T00:00:00+00:00",
+    "extraction_confidence": 90
+  }
+]

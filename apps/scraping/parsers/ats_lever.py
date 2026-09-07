@@ -6,6 +6,8 @@ from apps.companies.models import Company
 from apps.scraping.fetching import FetchResult
 
 logger = logging.getLogger("study_tracker.scraping.parsers.lever")
+PARSER_NAME = "lever"
+PARSER_VERSION = 1
 
 
 def _strip_html(html: str) -> str:

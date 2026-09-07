@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("exams", "0002_remove_examcycle_extraction_confidence_range_and_more"),
     ]

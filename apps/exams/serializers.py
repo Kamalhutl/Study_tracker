@@ -1,3 +1,5 @@
+from typing import Any
+
 from rest_framework import serializers
 
 from apps.exams.models import (
@@ -10,13 +12,13 @@ from apps.exams.models import (
 )
 
 
-class ConductingBodySerializer(serializers.ModelSerializer):
+class ConductingBodySerializer(serializers.ModelSerializer[ConductingBody]):
     class Meta:
         model = ConductingBody
         fields = ["id", "name", "short_name", "slug", "body_type", "state", "website", "is_active"]
 
 
-class ExamStageSerializer(serializers.ModelSerializer):
+class ExamStageSerializer(serializers.ModelSerializer[ExamStage]):
     class Meta:
         model = ExamStage
         fields = [
@@ -37,13 +39,13 @@ class ExamStageSerializer(serializers.ModelSerializer):
         ]
 
 
-class ExamDateChangeSerializer(serializers.ModelSerializer):
+class ExamDateChangeSerializer(serializers.ModelSerializer[ExamDateChange]):
     class Meta:
         model = ExamDateChange
         fields = ["field_name", "old_value", "new_value", "changed_at", "detected_by", "note"]
 
 
-class ExamCycleSerializer(serializers.ModelSerializer):
+class ExamCycleSerializer(serializers.ModelSerializer[ExamCycle]):
     stages = ExamStageSerializer(many=True, read_only=True)
     date_changes = ExamDateChangeSerializer(many=True, read_only=True)
 
@@ -74,7 +76,7 @@ class ExamCycleSerializer(serializers.ModelSerializer):
         ]
 
 
-class ExamEligibilitySerializer(serializers.ModelSerializer):
+class ExamEligibilitySerializer(serializers.ModelSerializer[ExamEligibility]):
     class Meta:
         model = ExamEligibility
         fields = [
@@ -94,7 +96,7 @@ class ExamEligibilitySerializer(serializers.ModelSerializer):
         ]
 
 
-class ExamListSerializer(serializers.ModelSerializer):
+class ExamListSerializer(serializers.ModelSerializer[Exam]):
     conducting_body = ConductingBodySerializer(read_only=True)
     latest_cycle_status = serializers.SerializerMethodField()
 
@@ -114,12 +116,12 @@ class ExamListSerializer(serializers.ModelSerializer):
             "latest_cycle_status",
         ]
 
-    def get_latest_cycle_status(self, obj):
+    def get_latest_cycle_status(self, obj: Exam) -> str | None:
         cycle = obj.cycles.filter(is_published=True).order_by("-year", "-created_at").first()
         return cycle.status if cycle else None
 
 
-class ExamDetailSerializer(serializers.ModelSerializer):
+class ExamDetailSerializer(serializers.ModelSerializer[Exam]):
     conducting_body = ConductingBodySerializer(read_only=True)
     cycles = ExamCycleSerializer(many=True, read_only=True)
     eligibility = ExamEligibilitySerializer(many=True, read_only=True)
@@ -143,7 +145,7 @@ class ExamDetailSerializer(serializers.ModelSerializer):
         ]
 
 
-class CalendarEventSerializer(serializers.Serializer):
+class CalendarEventSerializer(serializers.Serializer[dict[str, Any]]):
     date = serializers.DateField()
     event_type = serializers.CharField()
     exam_name = serializers.CharField()
@@ -154,10 +156,10 @@ class CalendarEventSerializer(serializers.Serializer):
     official_url = serializers.URLField(allow_blank=True)
 
 
-class SaveExamSerializer(serializers.Serializer):
+class SaveExamSerializer(serializers.Serializer[dict[str, Any]]):
     exam_slug = serializers.SlugField()
 
-    def validate_exam_slug(self, value):
+    def validate_exam_slug(self, value: str) -> str:
         if not Exam.objects.filter(slug=value).exists():
             raise serializers.ValidationError("Exam not found")
         return value

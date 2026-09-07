@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("companies", "0005_company_company_name_trgm"),
         ("jobs", "0001_initial"),

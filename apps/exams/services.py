@@ -40,7 +40,7 @@ def compute_effective_max_age(
         ex_service = relaxation.get("Ex-servicemen", 0)
         effective = max(0, ex_service - service_years) if service_years is not None else ex_service
         extra = max(extra, effective)
-    return max_age + extra
+    return max_age + extra  # type: ignore[no-any-return]
 
 
 def update_exam_cycle(
@@ -49,7 +49,7 @@ def update_exam_cycle(
     source_url: str = "",
     detected_by: str = ChangeDetectedBy.SCRAPE,
     note: str = "",
-    actor=None,
+    actor: Any | None = None,
 ) -> ExamCycle:
     """
     Update cycle fields and record ExamDateChange for each changed date field.

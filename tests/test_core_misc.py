@@ -29,7 +29,7 @@ def test_celery_declared_queues():
     from django.conf import settings
 
     names = {q.name for q in settings.CELERY_QUEUES}
-    assert names == {"default", "scraping", "notifications"}
+    assert names == {"default", "scraping", "scraping_browser", "notifications"}
     assert settings.CELERY_TASK_ROUTES == {
         "apps.scraping.*": {"queue": "scraping"},
         "apps.career_detection.*": {"queue": "scraping"},

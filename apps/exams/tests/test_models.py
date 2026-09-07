@@ -163,7 +163,6 @@ class TestAgeComputation:
 
 class TestAttemptsSemantics:
     def test_null_attempts_means_unlimited(self):
-
         # We just assert that null is allowed and not treated as zero in business logic.
         # This is a design doc, not a model constraint.
         pass

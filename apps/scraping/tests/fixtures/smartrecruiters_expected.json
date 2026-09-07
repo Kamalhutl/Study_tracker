@@ -1,0 +1,32 @@
+[
+  {
+    "source_job_id": "sr-job-001",
+    "source_url": "https://careers.smartrecruiters.com/acme/sr-job-001",
+    "apply_url": "https://careers.smartrecruiters.com/acme/sr-job-001",
+    "title": "Data Analyst",
+    "location_raw": "Austin, TX, US (Remote)",
+    "description": "",
+    "description_html": "",
+    "department": "Analytics",
+    "job_type": "",
+    "work_mode": "remote",
+    "experience_level": "",
+    "posted_at": null,
+    "extraction_confidence": 60
+  },
+  {
+    "source_job_id": "sr-job-002",
+    "source_url": "https://careers.smartrecruiters.com/acme/sr-job-002",
+    "apply_url": "https://careers.smartrecruiters.com/acme/sr-job-002",
+    "title": "Software Engineer",
+    "location_raw": "Boston, MA, US",
+    "description": "",
+    "description_html": "",
+    "department": "Engineering",
+    "job_type": "",
+    "work_mode": "",
+    "experience_level": "",
+    "posted_at": null,
+    "extraction_confidence": 60
+  }
+]

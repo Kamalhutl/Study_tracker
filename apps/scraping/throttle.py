@@ -67,13 +67,13 @@ def acquire_slot(
                 ) from None
             _sleep(_POLL_SECONDS)
             continue
-        except Exception as exc:
+        except Exception:
             # Redis connection errors (and any other backend failure) bubble up as
             # ThrottleUnavailable so callers can fail fast without a traceback.
             raise ThrottleUnavailable(
                 "rate-limiter backend unreachable, refusing to fetch",
                 url=domain,
-            ) from exc
+            ) from None
 
         if count <= rate_per_minute:
             if jitter_ms and jitter_ms[1] > 0:

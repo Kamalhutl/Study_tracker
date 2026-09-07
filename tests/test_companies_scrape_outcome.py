@@ -126,3 +126,50 @@ class TestAuditTransitions:
         company = _company(scrape_health=ScrapeHealth.UNKNOWN)
         services.record_scrape_outcome(company=company, success=True, now=timezone.now())
         assert AuditLog.objects.filter(action="company.scrape_outcome").count() == 1
+
+
+class TestTrustedFlag:
+    def test_trusted_false_does_not_update_last_jobs_seen(self):
+        company = _company(scrape_health=ScrapeHealth.HEALTHY, last_jobs_seen=42)
+        now = timezone.now()
+        services.record_scrape_outcome(
+            company=company, success=True, jobs_seen=10, trusted=False, now=now
+        )
+        company.refresh_from_db()
+        assert company.last_jobs_seen == 42  # unchanged
+        assert company.last_successful_scrape_at == now
+        assert company.consecutive_failures == 0
+
+    def test_trusted_true_updates_last_jobs_seen(self):
+        company = _company(scrape_health=ScrapeHealth.HEALTHY, last_jobs_seen=42)
+        now = timezone.now()
+        services.record_scrape_outcome(
+            company=company, success=True, jobs_seen=10, trusted=True, now=now
+        )
+        company.refresh_from_db()
+        assert company.last_jobs_seen == 10
+
+    def test_zero_job_run_then_partial_recovery_applies_zero_strikes(self):
+        # Simulate a zero-job run with trusted=False (quarantined) that does not update baseline
+        company = _company(scrape_health=ScrapeHealth.HEALTHY, last_jobs_seen=42)
+        # First run: zero jobs, untrusted (e.g., timeout)
+        services.record_scrape_outcome(
+            company=company, success=False, jobs_seen=0, trusted=False, now=timezone.now()
+        )
+        company.refresh_from_db()
+        assert company.last_jobs_seen == 42  # baseline preserved
+        assert company.consecutive_failures == 1  # failure still counted
+
+        # Second run: partial recovery (some jobs found), but still not trusted
+        services.record_scrape_outcome(
+            company=company, success=True, jobs_seen=5, trusted=False, now=timezone.now()
+        )
+        company.refresh_from_db()
+        assert company.last_jobs_seen == 42  # still unchanged
+
+        # Now a trusted=True run updates it
+        services.record_scrape_outcome(
+            company=company, success=True, jobs_seen=5, trusted=True, now=timezone.now()
+        )
+        company.refresh_from_db()
+        assert company.last_jobs_seen == 5

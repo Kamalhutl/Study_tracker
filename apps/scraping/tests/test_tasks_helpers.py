@@ -46,9 +46,9 @@ def test_get_parser_module_valid():
 
 
 def test_get_parser_module_unknown():
-    from apps.scraping.tasks import _get_parser_module
+    import apps.scraping.tasks as tasks_module
 
-    assert _get_parser_module("totally_unknown_xyz") is None
+    assert tasks_module._get_parser_module("totally_unknown_xyz") is None
 
 
 @pytest.mark.django_db
@@ -121,6 +121,8 @@ def test_scrape_company_no_parser_returns_failed(company):
 @pytest.mark.django_db
 def test_scrape_company_no_fetch_url_returns_failed(company):
     mock_parser_mod = MagicMock()
+    mock_parser_mod.PARSER_NAME = "greenhouse"
+    mock_parser_mod.PARSER_VERSION = 1
     mock_parser_mod.parse.return_value = []
 
     with (
@@ -152,6 +154,8 @@ def test_scrape_company_full_success_job_loop(company):
     }
 
     mock_parser_mod = MagicMock()
+    mock_parser_mod.PARSER_NAME = "greenhouse"
+    mock_parser_mod.PARSER_VERSION = 1
     mock_parser_mod.parse.return_value = [job_payload]
 
     with (
@@ -160,11 +164,30 @@ def test_scrape_company_full_success_job_loop(company):
         patch("apps.scraping.tasks._use_fetch_with_escalation") as mock_esc,
         patch("apps.scraping.tasks.fetch") as mock_fetch,
         patch("apps.scraping.tasks.upsert_job") as mock_upsert,
+        patch("core.locks.redis_lock") as mock_lock,
     ):
+        mock_lock.return_value.__enter__ = MagicMock()
+        mock_lock.return_value.__exit__ = MagicMock()
+
         mock_gpm.return_value = mock_parser_mod
         mock_url.return_value = "https://boards-api.greenhouse.io/v1/boards/helpertest/jobs"
         mock_esc.return_value = False
-        mock_fetch.return_value = MagicMock(status_code=200)
+        from scrapling import Selector
+
+        from apps.scraping.fetching import FetchMode, FetchResult
+
+        mock_fetch.return_value = FetchResult(
+            url="https://boards-api.greenhouse.io/v1/boards/helpertest/jobs",
+            final_url="https://boards-api.greenhouse.io/v1/boards/helpertest/jobs",
+            status_code=200,
+            html="<html><body>test</body></html>",
+            selector=Selector("<html><body>test</body></html>"),
+            fetcher_used=FetchMode.HTTP,
+            elapsed_ms=100,
+            from_cache=False,
+            escalation_reason="",
+            not_modified=False,
+        )
         mock_upsert.return_value = MagicMock(created=True)
 
         result = scrape_company(str(company.id), triggered_by="manual")
@@ -177,6 +200,8 @@ def test_scrape_company_full_success_job_loop(company):
 @pytest.mark.django_db
 def test_scrape_company_parse_error_creates_scrape_error(company):
     mock_parser_mod = MagicMock()
+    mock_parser_mod.PARSER_NAME = "greenhouse"
+    mock_parser_mod.PARSER_VERSION = 1
     mock_parser_mod.parse.side_effect = Exception("parse boom")
 
     with (
@@ -188,7 +213,22 @@ def test_scrape_company_parse_error_creates_scrape_error(company):
         mock_gpm.return_value = mock_parser_mod
         mock_url.return_value = "https://boards-api.greenhouse.io/v1/boards/helpertest/jobs"
         mock_esc.return_value = False
-        mock_fetch.return_value = MagicMock(status_code=200)
+        from scrapling import Selector
+
+        from apps.scraping.fetching import FetchMode, FetchResult
+
+        mock_fetch.return_value = FetchResult(
+            url="https://boards-api.greenhouse.io/v1/boards/helpertest/jobs",
+            final_url="https://boards-api.greenhouse.io/v1/boards/helpertest/jobs",
+            status_code=200,
+            html="<html><body>test</body></html>",
+            selector=Selector("<html><body>test</body></html>"),
+            fetcher_used=FetchMode.HTTP,
+            elapsed_ms=100,
+            from_cache=False,
+            escalation_reason="",
+            not_modified=False,
+        )
 
         result = scrape_company(str(company.id), triggered_by="manual")
 

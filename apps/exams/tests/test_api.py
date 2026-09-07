@@ -12,7 +12,7 @@ pytestmark = pytest.mark.django_db
 class TestExamList:
     def test_list_public_exams(self, client):
         body = ConductingBody.objects.create(name="UPSC", slug="upsc", body_type="central")
-        exam = Exam.objects.create(
+        Exam.objects.create(
             name="Civil Services",
             slug="cse",
             conducting_body=body,
@@ -143,3 +143,83 @@ class TestCalendar:
         stage_events = [e for e in response.data if e["event_type"] == "stage_exam"]
         assert len(stage_events) == 1
         assert stage_events[0]["is_tentative"] is True
+
+    def test_calendar_closure_bug(self, client):
+        from datetime import date
+
+        body = ConductingBody.objects.create(name="B", slug="b", body_type="central")
+        # Create three exams with distinct official_urls and cycles with dates in window
+        exam1 = Exam.objects.create(
+            name="E1",
+            slug="e1",
+            conducting_body=body,
+            category="other",
+            level="national",
+            official_url="https://e1.example",
+        )
+        exam2 = Exam.objects.create(
+            name="E2",
+            slug="e2",
+            conducting_body=body,
+            category="other",
+            level="national",
+            official_url="https://e2.example",
+        )
+        exam3 = Exam.objects.create(
+            name="E3",
+            slug="e3",
+            conducting_body=body,
+            category="other",
+            level="national",
+            official_url="https://e3.example",
+        )
+        # Create cycles with notification_date inside 2026-02-01 to 2026-03-31
+        _ = ExamCycle.objects.create(
+            exam=exam1,
+            year=2026,
+            cycle_label="c1",
+            status=CycleStatus.ANNOUNCED,
+            notification_date=date(2026, 2, 10),
+            is_published=True,
+            verified_by_human=True,
+        )
+        _ = ExamCycle.objects.create(
+            exam=exam2,
+            year=2026,
+            cycle_label="c2",
+            status=CycleStatus.ANNOUNCED,
+            notification_date=date(2026, 2, 20),
+            is_published=True,
+            verified_by_human=True,
+        )
+        _ = ExamCycle.objects.create(
+            exam=exam3,
+            year=2026,
+            cycle_label="c3",
+            status=CycleStatus.ANNOUNCED,
+            notification_date=date(2026, 3, 1),
+            is_published=True,
+            verified_by_human=True,
+        )
+        url = reverse("calendar") + "?from=2026-02-01&to=2026-03-31"
+        response = client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        events = response.data
+        # Each event should have official_url matching its exam's official_url
+        for event in events:
+            exam_slug = event["exam_slug"]
+            if exam_slug == "e1":
+                assert event["official_url"] == "https://e1.example"
+            elif exam_slug == "e2":
+                assert event["official_url"] == "https://e2.example"
+            elif exam_slug == "e3":
+                assert event["official_url"] == "https://e3.example"
+            else:
+                raise AssertionError(f"Unexpected exam_slug {exam_slug}")
+        # Also assert no event has wrong official_url
+        for event in events:
+            exam_slug = event["exam_slug"]
+            if exam_slug == "e1":
+                assert event["official_url"] != "https://e2.example"
+                assert event["official_url"] != "https://e3.example"
+            # etc.

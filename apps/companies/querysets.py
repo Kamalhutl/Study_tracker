@@ -5,6 +5,7 @@ from typing import Any, cast
 
 from django.db.models import Count, F, Q, QuerySet
 
+from apps.jobs.enums import JobStatus
 from core.models import AllObjectsManager, SoftDeleteManager, SoftDeleteQuerySet
 
 
@@ -59,6 +60,24 @@ class CompanyQuerySet(SoftDeleteQuerySet):
         annotated: QuerySet[Company] = self.annotate(
             open_jobs=Count("jobs", filter=Q(jobs__status="open")),
             total_jobs=Count("jobs"),
+        )
+        return cast("CompanyQuerySet", annotated)
+
+    def public(self) -> "CompanyQuerySet":
+        """Publicly visible companies: verified, active, not deleted."""
+        return self.filter(is_verified=True, is_active=True, is_deleted=False).order_by("name")
+
+    def with_public_job_counts(self) -> "CompanyQuerySet":
+        """Annotate with open_jobs_count matching Job.objects.public() criteria."""
+        annotated = self.annotate(
+            open_jobs_count=Count(
+                "jobs",
+                filter=Q(
+                    jobs__status=JobStatus.OPEN,
+                    jobs__is_published=True,
+                    jobs__is_deleted=False,
+                ),
+            )
         )
         return cast("CompanyQuerySet", annotated)
 

@@ -437,7 +437,7 @@ def _rank(
     from .types import ORIGIN_COSTS
 
     def sort_key(
-        pair: tuple[RawCandidate, int, list[dict[str, Any]]]
+        pair: tuple[RawCandidate, int, list[dict[str, Any]]],
     ) -> tuple[bool, int, int, int, str]:
         cand, score, _ = pair
         # confirmed ATS first

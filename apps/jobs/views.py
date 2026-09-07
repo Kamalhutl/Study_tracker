@@ -97,6 +97,14 @@ class JobDetailView(generics.RetrieveAPIView):
         return super().get(request, *args, **kwargs)
 
 
+class JobDetailBySlugView(JobDetailView):
+    lookup_field = "slug"
+
+    @extend_schema(responses={200: JobDetailSerializer})
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
 class SaveJobView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 

@@ -1,8 +1,11 @@
-from django.db.models import Q
+from typing import Any
+
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, status
 from rest_framework.filters import OrderingFilter
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -17,7 +20,7 @@ from apps.exams.serializers import (
 from core.pagination import CursorAwarePageNumberPagination
 
 
-class ExamListView(generics.ListAPIView):
+class ExamListView(generics.ListAPIView[Exam]):
     queryset = Exam.objects.filter(is_active=True).select_related("conducting_body")
     serializer_class = ExamListSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -28,7 +31,7 @@ class ExamListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
 
-class ExamDetailView(generics.RetrieveAPIView):
+class ExamDetailView(generics.RetrieveAPIView[Exam]):
     queryset = Exam.objects.filter(is_active=True).prefetch_related(
         "cycles", "cycles__stages", "cycles__date_changes", "eligibility"
     )
@@ -37,7 +40,7 @@ class ExamDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
 
 
-class ExamCycleListView(generics.ListAPIView):
+class ExamCycleListView(generics.ListAPIView[ExamCycle]):
     queryset = ExamCycle.objects.filter(is_published=True).select_related("exam")
     serializer_class = ExamCycleSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -48,7 +51,7 @@ class ExamCycleListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
 
-class ExamCycleDetailView(generics.RetrieveAPIView):
+class ExamCycleDetailView(generics.RetrieveAPIView[ExamCycle]):
     queryset = ExamCycle.objects.filter(is_published=True).prefetch_related(
         "stages", "date_changes"
     )
@@ -57,28 +60,28 @@ class ExamCycleDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
 
 
-class CalendarView(generics.ListAPIView):
+class CalendarView(generics.ListAPIView):  # type: ignore[type-arg]
     permission_classes = [permissions.AllowAny]
     serializer_class = CalendarEventSerializer
     pagination_class = None
 
-    def get_queryset(self):
-        from datetime import datetime, timedelta
+    def get_queryset(self) -> list[dict[str, Any]]:  # type: ignore[override]
+        from datetime import date, datetime, timedelta
 
         from apps.exams.models import ExamCycle
 
         # Build flat events
         events = []
-        start_date = self.request.query_params.get("from")
-        end_date = self.request.query_params.get("to")
-        if not start_date:
+        start_date_str = self.request.query_params.get("from")
+        end_date_str = self.request.query_params.get("to")
+        if start_date_str is None:
             start_date = timezone.now().date()
         else:
-            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
-        if not end_date:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        if end_date_str is None:
             end_date = start_date + timedelta(days=90)
         else:
-            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
 
         cycles = (
             ExamCycle.objects.filter(
@@ -109,7 +112,14 @@ class CalendarView(generics.ListAPIView):
         for cycle in cycles:
             exam = cycle.exam
 
-            def add_event(date, event_type, stage_name=None, is_tentative=False):
+            def add_event(
+                date: date | None,
+                event_type: str,
+                stage_name: str | None = None,
+                is_tentative: bool = False,
+                exam: Exam = exam,
+                cycle: ExamCycle = cycle,
+            ) -> None:
                 if date is not None and start_date <= date <= end_date:
                     events.append(
                         {
@@ -137,28 +147,28 @@ class CalendarView(generics.ListAPIView):
                 add_event(stage.result_date, "stage_result", stage.name, stage.is_date_tentative)
 
         # Sort by date
-        events.sort(key=lambda x: x["date"])
+        events.sort(key=lambda x: x["date"])  # type: ignore[arg-type,return-value]
         return events
 
 
 class SaveExamView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, slug):
+    def post(self, request: Request, slug: str) -> Response:
         exam = generics.get_object_or_404(Exam, slug=slug)
         saved, created = SavedExam.objects.get_or_create(user=request.user, exam=exam)
         return Response({"saved": True, "created": created}, status=status.HTTP_200_OK)
 
-    def delete(self, request, slug):
+    def delete(self, request: Request, slug: str) -> Response:
         exam = generics.get_object_or_404(Exam, slug=slug)
         deleted = SavedExam.objects.filter(user=request.user, exam=exam).delete()
         return Response({"saved": False, "deleted": deleted > 0}, status=status.HTTP_200_OK)
 
 
-class SavedExamListView(generics.ListAPIView):
+class SavedExamListView(generics.ListAPIView[Exam]):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ExamListSerializer
     pagination_class = CursorAwarePageNumberPagination
 
-    def get_queryset(self):
-        return Exam.objects.filter(saved_by__user=self.request.user, is_active=True)
+    def get_queryset(self) -> QuerySet[Exam]:
+        return Exam.objects.filter(saved_by__user=self.request.user, is_active=True)  # type: ignore[no-any-return]

@@ -1,7 +1,11 @@
+from typing import Any, Dict, Optional
+
+from django.conf import settings
 from rest_framework import serializers
 
 from apps.companies.models import Company
 from apps.jobs.models import Job, JobReport, SavedJob
+from apps.jobs.seo import build_job_posting
 
 
 class CompanyNestedSerializer(serializers.ModelSerializer):
@@ -18,6 +22,7 @@ class JobListSerializer(serializers.ModelSerializer):
         model = Job
         fields = (
             "id",
+            "slug",
             "title",
             "company",
             "location_raw",
@@ -41,11 +46,14 @@ class JobDetailSerializer(serializers.ModelSerializer):
     is_saved = serializers.SerializerMethodField()
     description_html_sanitized = serializers.CharField(read_only=True)
     scraped_at = serializers.DateTimeField(source="last_seen_at", read_only=True)
+    canonical_url = serializers.SerializerMethodField()
+    structured_data = serializers.SerializerMethodField()
 
     class Meta:
         model = Job
         fields = (
             "id",
+            "slug",
             "title",
             "company",
             "location_raw",
@@ -61,6 +69,8 @@ class JobDetailSerializer(serializers.ModelSerializer):
             "experience_level",
             "extraction_confidence",
             "scraped_at",
+            "canonical_url",
+            "structured_data",
         )
 
     def get_is_saved(self, obj):
@@ -68,6 +78,12 @@ class JobDetailSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return getattr(obj, "is_saved", False)
         return False
+
+    def get_canonical_url(self, obj) -> str:
+        return f"{settings.SITE_BASE_URL}/jobs/{obj.slug}"
+
+    def get_structured_data(self, obj) -> Optional[Dict[str, Any]]:
+        return build_job_posting(obj)
 
 
 class SavedJobSerializer(serializers.ModelSerializer):

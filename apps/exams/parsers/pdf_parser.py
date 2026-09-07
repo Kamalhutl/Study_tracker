@@ -126,14 +126,10 @@ def find_date_candidates(text: str, source_url: str = "") -> list[DateCandidate]
                         try:
                             d1, d2, d3 = int(parts[0]), int(parts[1]), int(parts[2])
                             # Ambiguous if the first two numbers are both <= 12 (i.e., could be day/month)
-                            if hint == "day-month-year":
-                                # day is d1, month is d2
-                                if d1 <= 12 and d2 <= 12:
-                                    ambiguous = True
-                            elif hint == "year-month-day":
-                                # month is d2, day is d3
-                                if d2 <= 12 and d3 <= 12:
-                                    ambiguous = True
+                            if (
+                                hint == "day-month-year" and d1 <= 12 and d2 <= 12 and d1 != d2
+                            ) or (hint == "year-month-day" and d2 <= 12 and d3 <= 12 and d2 != d3):
+                                ambiguous = True
                         except ValueError:
                             pass
             except Exception:

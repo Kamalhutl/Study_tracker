@@ -1,4 +1,6 @@
-from django.core.management.base import BaseCommand
+from typing import Any
+
+from django.core.management.base import BaseCommand, CommandParser
 from django.db import transaction
 from django.utils.text import slugify
 
@@ -19,11 +21,11 @@ from apps.exams.models import (
 class Command(BaseCommand):
     help = "Seed exam reference data (idempotent)."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("--dry-run", action="store_true", help="Print without saving")
         parser.add_argument("--only", type=str, help="Slug of exam to seed (optional)")
 
-    def handle(self, *args, **options):
+    def handle(self, *args: object, **options: object) -> None:
         dry_run = options.get("dry_run", False)
         only_slug = options.get("only")
         seed_data = self.get_seed_data()
@@ -139,7 +141,7 @@ class Command(BaseCommand):
                 )
         self.stdout.write(f"Created {created} exams, updated {updated}.")
 
-    def get_seed_data(self):
+    def get_seed_data(self) -> list[dict[str, Any]]:
         # Twelve exams chosen for search volume and breadth
         exams = [
             {
@@ -252,7 +254,7 @@ class Command(BaseCommand):
             },
             {
                 "slug": "ibps-po",
-                "name": "Probationary Officer",
+                "name": "IBPS Probationary Officer",
                 "short_name": "IBPS PO",
                 "conducting_body": "Institute of Banking Personnel Selection",
                 "body_type": BodyType.BANKING,
@@ -272,7 +274,7 @@ class Command(BaseCommand):
             },
             {
                 "slug": "ibps-clerk",
-                "name": "Clerk",
+                "name": "IBPS Clerk",
                 "short_name": "IBPS Clerk",
                 "conducting_body": "Institute of Banking Personnel Selection",
                 "body_type": BodyType.BANKING,
@@ -292,7 +294,7 @@ class Command(BaseCommand):
             },
             {
                 "slug": "sbi-po",
-                "name": "Probationary Officer",
+                "name": "SBI Probationary Officer",
                 "short_name": "SBI PO",
                 "conducting_body": "State Bank of India",
                 "body_type": BodyType.BANKING,

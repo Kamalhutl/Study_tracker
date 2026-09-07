@@ -76,7 +76,7 @@ class ConductingBody(UUIDModel, TimeStampedModel, SoftDeleteModel):
             GinIndex(fields=["name"], opclasses=["gin_trgm_ops"], name="conductingbody_name_trgm"),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -100,7 +100,7 @@ class Exam(UUIDModel, TimeStampedModel, SoftDeleteModel):
             GinIndex(fields=["name"], opclasses=["gin_trgm_ops"], name="exam_name_trgm"),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -144,7 +144,7 @@ class ExamCycle(UUIDModel, TimeStampedModel, SoftDeleteModel):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.exam.name} {self.cycle_label}"
 
 
@@ -168,7 +168,7 @@ class ExamStage(UUIDModel, TimeStampedModel, SoftDeleteModel):
         unique_together = [("cycle", "stage_order")]
         ordering = ["stage_order"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.cycle} - {self.name}"
 
 
@@ -195,7 +195,7 @@ class ExamEligibility(UUIDModel, TimeStampedModel, SoftDeleteModel):
     class Meta:
         verbose_name_plural = "exam eligibility"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Eligibility for {self.exam.name}"
 
 
@@ -224,5 +224,5 @@ class SavedExam(UUIDModel, TimeStampedModel, SoftDeleteModel):
     class Meta:
         unique_together = [("user", "exam")]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user} saved {self.exam.name}"

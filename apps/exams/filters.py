@@ -1,5 +1,6 @@
 from django.contrib.postgres.search import TrigramSimilarity
-from django.db.models import Q
+from django.db.models import Q, QuerySet
+from django.db.models.functions import Greatest
 from django.utils import timezone
 from django_filters import rest_framework as filters
 
@@ -18,9 +19,9 @@ class ExamFilter(filters.FilterSet):
 
     class Meta:
         model = Exam
-        fields = []
+        fields: list[str] = []
 
-    def filter_q(self, queryset, name, value):
+    def filter_q(self, queryset: QuerySet[Exam], name: str, value: str) -> QuerySet[Exam]:
         if not value:
             return queryset
         if len(value) < 3:
@@ -29,31 +30,26 @@ class ExamFilter(filters.FilterSet):
                 | Q(short_name__icontains=value)
                 | Q(conducting_body__name__icontains=value)
             )
-        # Trigram similarity
-        return (
-            queryset.annotate(
-                sim=TrigramSimilarity("name", value)
-                + TrigramSimilarity("short_name", value)
-                + TrigramSimilarity("conducting_body__name", value)
-            )
-            .filter(sim__gte=0.1)
-            .distinct()
+        sim = Greatest(
+            TrigramSimilarity("name", value),
+            TrigramSimilarity("short_name", value),
+            TrigramSimilarity("conducting_body__name", value),
         )
+        return queryset.annotate(sim=sim).filter(sim__gte=0.3).order_by("-sim").distinct()
 
-    def filter_body(self, queryset, name, value):
+    def filter_body(self, queryset: QuerySet[Exam], name: str, value: str) -> QuerySet[Exam]:
         slugs = [s.strip() for s in value.split(",") if s.strip()]
         return queryset.filter(conducting_body__slug__in=slugs)
 
-    def filter_category(self, queryset, name, value):
+    def filter_category(self, queryset: QuerySet[Exam], name: str, value: str) -> QuerySet[Exam]:
         cats = [c.strip() for c in value.split(",") if c.strip()]
         return queryset.filter(category__in=cats)
 
-    def filter_level(self, queryset, name, value):
+    def filter_level(self, queryset: QuerySet[Exam], name: str, value: str) -> QuerySet[Exam]:
         levels = [v.strip() for v in value.split(",") if v.strip()]
         return queryset.filter(level__in=levels)
 
-    def filter_status(self, queryset, name, value):
-        # Filter by latest published cycle status
+    def filter_status(self, queryset: QuerySet[Exam], name: str, value: str) -> QuerySet[Exam]:
         from django.db.models import OuterRef, Subquery
 
         from apps.exams.models import ExamCycle
@@ -65,7 +61,9 @@ class ExamFilter(filters.FilterSet):
         )
         return queryset.annotate(latest_status=latest_status).filter(latest_status=value)
 
-    def filter_applications_open(self, queryset, name, value):
+    def filter_applications_open(
+        self, queryset: QuerySet[Exam], name: str, value: bool
+    ) -> QuerySet[Exam]:
         if value:
             now = timezone.now().date()
             return queryset.filter(
@@ -75,7 +73,9 @@ class ExamFilter(filters.FilterSet):
             ).distinct()
         return queryset
 
-    def filter_upcoming(self, queryset, name, value):
+    def filter_upcoming(
+        self, queryset: QuerySet[Exam], name: str, value: int | None
+    ) -> QuerySet[Exam]:
         if value is not None:
             from datetime import timedelta
 
@@ -94,7 +94,9 @@ class ExamFilter(filters.FilterSet):
             ).distinct()
         return queryset
 
-    def filter_allow_final_year(self, queryset, name, value):
+    def filter_allow_final_year(
+        self, queryset: QuerySet[Exam], name: str, value: bool
+    ) -> QuerySet[Exam]:
         if value:
             return queryset.filter(eligibility__allow_final_year_appearing=True).distinct()
         return queryset

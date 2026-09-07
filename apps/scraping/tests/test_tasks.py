@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.test import override_settings
 from django.utils import timezone
 from scrapling.parser import Selector
 
@@ -66,10 +67,11 @@ def test_scrape_company_greenhouse_creates_jobs(db, company, mock_fetch_result):
         patch("apps.scraping.tasks._build_fetch_url") as mock_build_url,
         patch("apps.scraping.tasks._use_fetch_with_escalation") as mock_use_escalation,
     ):
-
         mock_fetch.return_value = mock_fetch_result
-        mock_get_parser.return_value = MagicMock()
-        mock_get_parser.return_value.parse.return_value = [
+        mock_parser_mod = MagicMock()
+        mock_parser_mod.PARSER_NAME = "greenhouse"
+        mock_parser_mod.PARSER_VERSION = 1
+        mock_parser_mod.parse.return_value = [
             {
                 "source_job_id": "4567890",
                 "source_url": "https://boards.greenhouse.io/test-ats/jobs/4567890",
@@ -86,6 +88,7 @@ def test_scrape_company_greenhouse_creates_jobs(db, company, mock_fetch_result):
                 "extraction_confidence": 90,
             }
         ]
+        mock_get_parser.return_value = mock_parser_mod
         mock_build_url.return_value = (
             "https://boards-api.greenhouse.io/v1/boards/test-ats/jobs?content=true"
         )
@@ -112,10 +115,16 @@ def test_scrape_company_greenhouse_creates_jobs(db, company, mock_fetch_result):
 def test_scrape_company_fetch_error_marks_failed(db, company):
     with (
         patch("apps.scraping.tasks.fetch") as mock_fetch,
-        patch("apps.scraping.tasks._get_parser_module"),
+        patch("apps.scraping.tasks._get_parser_module") as mock_get_parser,
         patch("apps.scraping.tasks._build_fetch_url") as mock_build_url,
         patch("apps.scraping.tasks._use_fetch_with_escalation") as mock_use_escalation,
     ):
+        # Provide a mock parser with the required attributes
+        mock_parser_mod = MagicMock()
+        mock_parser_mod.PARSER_NAME = "greenhouse"
+        mock_parser_mod.PARSER_VERSION = 1
+        mock_get_parser.return_value = mock_parser_mod
+
         mock_fetch.side_effect = FetchError("Connection timeout", url="https://test.com")
         mock_build_url.return_value = (
             "https://boards-api.greenhouse.io/v1/boards/test-ats/jobs?content=true"
@@ -164,10 +173,11 @@ def test_scrape_company_applies_missing_strikes(db, company, mock_fetch_result):
         patch("apps.scraping.tasks._build_fetch_url") as mock_build_url,
         patch("apps.scraping.tasks._use_fetch_with_escalation") as mock_use_escalation,
     ):
-
         mock_fetch.return_value = mock_fetch_result
-        mock_get_parser.return_value = MagicMock()
-        mock_get_parser.return_value.parse.return_value = [
+        mock_parser_mod = MagicMock()
+        mock_parser_mod.PARSER_NAME = "greenhouse"
+        mock_parser_mod.PARSER_VERSION = 1
+        mock_parser_mod.parse.return_value = [
             {
                 "source_job_id": "job1",
                 "source_url": "https://test.com/jobs/1",
@@ -214,6 +224,7 @@ def test_scrape_company_applies_missing_strikes(db, company, mock_fetch_result):
                 "extraction_confidence": 90,
             },
         ]
+        mock_get_parser.return_value = mock_parser_mod
         mock_build_url.return_value = (
             "https://boards-api.greenhouse.io/v1/boards/test-ats/jobs?content=true"
         )
@@ -229,19 +240,20 @@ def test_scrape_company_applies_missing_strikes(db, company, mock_fetch_result):
         patch("apps.scraping.tasks._build_fetch_url") as mock_build_url,
         patch("apps.scraping.tasks._use_fetch_with_escalation") as mock_use_escalation,
     ):
-
         mock_fetch.return_value = mock_fetch_result
-        mock_get_parser.return_value = MagicMock()
-        mock_get_parser.return_value.parse.return_value = [
+        mock_parser_mod = MagicMock()
+        mock_parser_mod.PARSER_NAME = "greenhouse"
+        mock_parser_mod.PARSER_VERSION = 1
+        mock_parser_mod.parse.return_value = [
             {
-                "source_job_id": "job1",
-                "source_url": "https://test.com/jobs/1",
-                "apply_url": "https://test.com/jobs/1",
-                "title": "Job 1",
+                "source_job_id": "4567890",
+                "source_url": "https://boards.greenhouse.io/test-ats/jobs/4567890",
+                "apply_url": "https://boards.greenhouse.io/test-ats/jobs/4567890",
+                "title": "Senior Software Engineer",
                 "location_raw": "Remote",
-                "description": "Job 1 description",
-                "description_html": "<div>Job 1 description</div>",
-                "department": "",
+                "description": "We are looking for a Senior Software Engineer.",
+                "description_html": "<div>We are looking for a Senior Software Engineer.</div>",
+                "department": "Engineering",
                 "job_type": "",
                 "work_mode": "",
                 "experience_level": "",
@@ -249,6 +261,7 @@ def test_scrape_company_applies_missing_strikes(db, company, mock_fetch_result):
                 "extraction_confidence": 90,
             }
         ]
+        mock_get_parser.return_value = mock_parser_mod
         mock_build_url.return_value = (
             "https://boards-api.greenhouse.io/v1/boards/test-ats/jobs?content=true"
         )
@@ -271,10 +284,11 @@ def test_scrape_company_updates_next_scrape_at(db, company, mock_fetch_result):
         patch("apps.scraping.tasks._build_fetch_url") as mock_build_url,
         patch("apps.scraping.tasks._use_fetch_with_escalation") as mock_use_escalation,
     ):
-
         mock_fetch.return_value = mock_fetch_result
-        mock_get_parser.return_value = MagicMock()
-        mock_get_parser.return_value.parse.return_value = [
+        mock_parser_mod = MagicMock()
+        mock_parser_mod.PARSER_NAME = "greenhouse"
+        mock_parser_mod.PARSER_VERSION = 1
+        mock_parser_mod.parse.return_value = [
             {
                 "source_job_id": "4567890",
                 "source_url": "https://boards.greenhouse.io/test-ats/jobs/4567890",
@@ -291,6 +305,7 @@ def test_scrape_company_updates_next_scrape_at(db, company, mock_fetch_result):
                 "extraction_confidence": 90,
             }
         ]
+        mock_get_parser.return_value = mock_parser_mod
         mock_build_url.return_value = (
             "https://boards-api.greenhouse.io/v1/boards/test-ats/jobs?content=true"
         )
@@ -672,3 +687,396 @@ def test_scrape_company_health_set_to_failing_at_5(db, user):
         # Consecutive failures should reach 5 and health should be FAILING
         assert company.consecutive_failures == 5
         assert company.scrape_health == ScrapeHealth.FAILING
+
+
+# ==================== CONDITIONAL GET CORRECTIONS TESTS ====================
+
+
+def test_not_modified_calls_record_scrape_outcome(db, user):
+    """Test that record_scrape_outcome is called on the not_modified path."""
+    import hashlib
+
+    from apps.companies.enums import CareerSourceType, ScrapeHealth
+    from apps.scraping.fetching import FetchMode, FetchResult
+    from apps.scraping.models import SourceFetchState
+
+    company = Company.objects.create(
+        added_by=user,
+        name="Not Modified Co",
+        domain="notmod.com",
+        career_url="https://notmod.com/careers",
+        career_source_type=CareerSourceType.GREENHOUSE,
+        ats_identifier="notmod",
+        slug="notmod",
+        is_verified=True,
+        is_active=True,
+        last_jobs_seen=5,
+        scrape_health=ScrapeHealth.DEGRADED,
+        consecutive_failures=2,
+        total_scrapes=0,
+    )
+
+    url = "https://notmod.com/careers"
+    url_hash = hashlib.sha256(url.encode()).hexdigest()
+    SourceFetchState.objects.create(
+        url_hash=url_hash,
+        url=url,
+        etag="abc",
+        last_modified="",
+        body_hash="",
+        last_fetched_at=timezone.now(),
+        hit_count=3,
+        miss_count=0,
+    )
+
+    # Create a fetch result with not_modified=True
+    not_modified_result = FetchResult(
+        url=url,
+        final_url=url,
+        status_code=304,
+        html="",
+        selector=None,
+        fetcher_used=FetchMode.HTTP,
+        elapsed_ms=100,
+        from_cache=False,
+        escalation_reason="",
+        not_modified=True,
+        xhr_payloads=[],
+    )
+
+    with (
+        patch("apps.scraping.tasks.fetch") as mock_fetch,
+        patch("apps.scraping.tasks.redis_lock") as mock_lock,
+    ):
+        mock_lock.return_value.__enter__ = MagicMock()
+        mock_lock.return_value.__exit__ = MagicMock()
+        mock_fetch.return_value = not_modified_result
+
+        with patch("apps.scraping.tasks.record_scrape_outcome") as mock_record:
+
+            def record_side_effect(company, success, jobs_seen, now):
+                company.total_scrapes += 1
+                company.last_scraped_at = now
+                company.consecutive_failures = 0
+                company.scrape_health = ScrapeHealth.HEALTHY
+                company.next_scrape_at = now + timedelta(minutes=company.scrape_interval_minutes)
+                company.save()
+
+            mock_record.side_effect = record_side_effect
+
+            scrape_company(company.id)
+
+            mock_record.assert_called_once()
+
+            call_args = mock_record.call_args[1]
+            assert call_args["company"] == company
+            assert call_args["success"] is True
+            assert call_args["jobs_seen"] == 5
+            assert call_args["now"] is not None
+
+            company.refresh_from_db()
+            assert company.scrape_health == ScrapeHealth.HEALTHY
+            assert company.consecutive_failures == 0
+            assert company.total_scrapes == 1
+            assert company.next_scrape_at > company.last_scraped_at
+
+
+def test_not_modified_advances_next_scrape_at(db, user):
+    """Test that next_scrape_at moves forward after a 304."""
+
+    from apps.companies.enums import CareerSourceType, ScrapeHealth
+    from apps.scraping.fetching import FetchMode, FetchResult
+
+    company = Company.objects.create(
+        added_by=user,
+        name="Next Scrape Co",
+        domain="nextscrape.com",
+        career_url="https://nextscrape.com/careers",
+        career_source_type=CareerSourceType.GREENHOUSE,
+        ats_identifier="nextscrape",
+        slug="nextscrape",
+        is_verified=True,
+        is_active=True,
+        last_jobs_seen=5,
+        scrape_health=ScrapeHealth.HEALTHY,
+        consecutive_failures=0,
+        total_scrapes=0,
+        last_scraped_at=timezone.now() - timedelta(hours=1),
+        next_scrape_at=timezone.now() - timedelta(minutes=30),
+    )
+
+    not_modified_result = FetchResult(
+        url="https://nextscrape.com/careers",
+        final_url="https://nextscrape.com/careers",
+        status_code=304,
+        html="",
+        selector=None,
+        fetcher_used=FetchMode.HTTP,
+        elapsed_ms=100,
+        from_cache=False,
+        escalation_reason="",
+        not_modified=True,
+        xhr_payloads=[],
+    )
+
+    with patch("apps.scraping.tasks.fetch") as mock_fetch:
+        mock_fetch.return_value = not_modified_result
+
+        with patch("apps.scraping.tasks.record_scrape_outcome") as mock_record:
+            # Simulate record_scrape_outcome updating the company
+            def record_side_effect(company, success, jobs_seen, now):
+                company.total_scrapes += 1
+                company.last_scraped_at = now
+                company.consecutive_failures = 0
+                company.scrape_health = ScrapeHealth.HEALTHY
+                company.next_scrape_at = now + timedelta(minutes=company.scrape_interval_minutes)
+                company.save()
+
+            mock_record.side_effect = record_side_effect
+
+            old_next = company.next_scrape_at
+            scrape_company(company.id)
+
+            company.refresh_from_db()
+            assert company.next_scrape_at > old_next
+
+
+def test_not_modified_recovers_health(db, user):
+    """Test that company with consecutive_failures=2 and DEGRADED becomes HEALTHY after 304."""
+
+    from apps.companies.enums import CareerSourceType, ScrapeHealth
+    from apps.scraping.fetching import FetchMode, FetchResult
+
+    company = Company.objects.create(
+        added_by=user,
+        name="Recover Co",
+        domain="recover.com",
+        career_url="https://recover.com/careers",
+        career_source_type=CareerSourceType.GREENHOUSE,
+        ats_identifier="recover",
+        slug="recover",
+        is_verified=True,
+        is_active=True,
+        last_jobs_seen=5,
+        scrape_health=ScrapeHealth.DEGRADED,
+        consecutive_failures=2,
+        total_scrapes=0,
+    )
+
+    not_modified_result = FetchResult(
+        url="https://recover.com/careers",
+        final_url="https://recover.com/careers",
+        status_code=304,
+        html="",
+        selector=None,
+        fetcher_used=FetchMode.HTTP,
+        elapsed_ms=100,
+        from_cache=False,
+        escalation_reason="",
+        not_modified=True,
+        xhr_payloads=[],
+    )
+
+    with (
+        patch("apps.scraping.tasks.fetch") as mock_fetch,
+        patch("apps.scraping.tasks.redis_lock") as mock_lock,
+    ):
+        mock_lock.return_value.__enter__ = MagicMock()
+        mock_lock.return_value.__exit__ = MagicMock()
+        mock_fetch.return_value = not_modified_result
+
+        with patch("apps.scraping.tasks.record_scrape_outcome") as mock_record:
+
+            def record_side_effect(company, success, jobs_seen, now):
+                company.total_scrapes += 1
+                company.last_scraped_at = now
+                company.consecutive_failures = 0
+                company.scrape_health = ScrapeHealth.HEALTHY
+                company.next_scrape_at = now + timedelta(minutes=company.scrape_interval_minutes)
+                company.save()
+
+            mock_record.side_effect = record_side_effect
+
+            scrape_company(company.id)
+
+            company.refresh_from_db()
+            assert company.consecutive_failures == 0
+            assert company.scrape_health == ScrapeHealth.HEALTHY
+
+
+def test_not_modified_increments_total_scrapes(db, user):
+    """Test that total_scrapes is incremented after a 304."""
+
+    from apps.companies.enums import CareerSourceType
+    from apps.scraping.fetching import FetchMode, FetchResult
+
+    company = Company.objects.create(
+        added_by=user,
+        name="Total Scrapes Co",
+        domain="totalscrapes.com",
+        career_url="https://totalscrapes.com/careers",
+        career_source_type=CareerSourceType.GREENHOUSE,
+        ats_identifier="totalscrapes",
+        slug="totalscrapes",
+        is_verified=True,
+        is_active=True,
+        last_jobs_seen=5,
+        scrape_health=ScrapeHealth.HEALTHY,
+        consecutive_failures=0,
+        total_scrapes=0,
+    )
+
+    not_modified_result = FetchResult(
+        url="https://totalscrapes.com/careers",
+        final_url="https://totalscrapes.com/careers",
+        status_code=304,
+        html="",
+        selector=None,
+        fetcher_used=FetchMode.HTTP,
+        elapsed_ms=100,
+        from_cache=False,
+        escalation_reason="",
+        not_modified=True,
+        xhr_payloads=[],
+    )
+
+    with patch("apps.scraping.tasks.fetch") as mock_fetch:
+        mock_fetch.return_value = not_modified_result
+
+        with patch("apps.scraping.tasks.record_scrape_outcome") as mock_record:
+            # Simulate record_scrape_outcome incrementing total_scrapes
+            def record_side_effect(company, success, jobs_seen, now):
+                company.total_scrapes += 1
+                company.last_scraped_at = now
+                company.consecutive_failures = 0
+                company.scrape_health = ScrapeHealth.HEALTHY
+                company.next_scrape_at = now + timedelta(minutes=company.scrape_interval_minutes)
+                company.save()
+
+            mock_record.side_effect = record_side_effect
+
+            scrape_company(company.id)
+
+            company.refresh_from_db()
+            assert company.total_scrapes == 1
+
+
+def test_clear_fetch_state_keeps_row(db, user):
+    """Test that clearing validators updates fields to blank but keeps the row and hit_count."""
+    import hashlib
+
+    from apps.scraping.models import SourceFetchState
+    from apps.scraping.tasks import _clear_fetch_state
+
+    url = "https://testclear.com/careers"
+    url_hash = hashlib.sha256(url.encode()).hexdigest()
+
+    # Create a state row with validators and hit_count
+    state = SourceFetchState.objects.create(
+        url_hash=url_hash,
+        url=url,
+        etag="abc123",
+        last_modified="Mon, 01 Jan 2024 00:00:00 GMT",
+        body_hash="def456",
+        last_fetched_at=timezone.now(),
+        hit_count=42,
+        miss_count=7,
+    )
+
+    # Call _clear_fetch_state (which now updates blanks)
+    _clear_fetch_state(url)
+
+    # Reload state from DB
+    state.refresh_from_db()
+
+    # Row should still exist
+    assert SourceFetchState.objects.filter(url_hash=url_hash).exists()
+
+    # Validators should be blank
+    assert state.etag == ""
+    assert state.last_modified == ""
+    assert state.body_hash == ""
+
+    # hit_count and miss_count should be preserved
+    assert state.hit_count == 42
+    assert state.miss_count == 7
+
+
+@override_settings(FETCH_ALLOW_DYNAMIC=True)
+def test_browser_escalation_clears_validators(db, user):
+    """Test that browser-escalated fetch clears stored validators and writes no etag/body_hash."""
+    import hashlib
+
+    from scrapling.parser import Selector
+
+    from apps.companies.enums import CareerSourceType
+    from apps.scraping.fetching import FetchMode, FetchResult, fetch_with_escalation
+    from apps.scraping.models import SourceFetchState
+
+    company = Company.objects.create(
+        added_by=user,
+        name="Escalation Co",
+        domain="escalation.com",
+        career_url="https://escalation.com/careers",
+        career_source_type=CareerSourceType.OWN_CAREER_PAGE,
+        ats_identifier="",
+        slug="escalation",
+        is_verified=True,
+        is_active=True,
+    )
+
+    url = "https://escalation.com/careers"
+    url_hash = hashlib.sha256(url.encode()).hexdigest()
+
+    # Create a state row with validators
+    SourceFetchState.objects.create(
+        url_hash=url_hash,
+        url=url,
+        etag="existing_etag",
+        last_modified="Mon, 01 Jan 2024 00:00:00 GMT",
+        body_hash="existing_hash",
+        last_fetched_at=timezone.now(),
+        hit_count=10,
+        miss_count=0,
+    )
+
+    # Mock fetch to return a sparse HTTP result that triggers escalation
+    # and then a dynamic fetch result
+    with patch("apps.scraping.fetching.fetch") as mock_fetch:
+        # First call (HTTP) - sparse page to trigger escalation
+        http_result = FetchResult(
+            url=url,
+            final_url=url,
+            status_code=200,
+            html="<html><body>test</body></html>",
+            selector=Selector(content="<html><body>test</body></html>"),
+            fetcher_used=FetchMode.HTTP,
+            elapsed_ms=50,
+            from_cache=False,
+            escalation_reason="",
+        )
+
+        # Second call (DYNAMIC) - the escalated browser fetch
+        dynamic_result = FetchResult(
+            url=url,
+            final_url=url,
+            status_code=200,
+            html="<html><body><h1>Rendered</h1></body></html>",
+            selector=Selector(content="<html><body><h1>Rendered</h1></body></html>"),
+            fetcher_used=FetchMode.DYNAMIC,
+            elapsed_ms=200,
+            from_cache=False,
+            escalation_reason="",
+        )
+
+        mock_fetch.side_effect = [http_result, dynamic_result]
+
+        result = fetch_with_escalation(url, company=company)
+
+        assert result.fetcher_used == FetchMode.DYNAMIC
+
+        state = SourceFetchState.objects.get(url_hash=url_hash)
+        assert state.etag == ""
+        assert state.last_modified == ""
+        assert state.body_hash == ""
+        assert state.hit_count == 10

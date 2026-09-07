@@ -14,6 +14,7 @@ import nh3
 from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
+from django.utils.text import slugify
 
 from apps.audit_logs.services import record, snapshot
 from core.utils import normalize_url, sha256_of
@@ -122,6 +123,13 @@ def _title_normalized(title: str) -> str:
 
 def _payload_hash(title: str, location_raw: str, description: str) -> str:
     return sha256_of(title, location_raw, description)
+
+
+def _unique_slug(job: Job) -> str:
+    """Generate a unique slug for a job using title, company name, city, and its UUID."""
+    base = slugify(f"{job.title}-{job.company.name}-{job.city}")[:311]
+    suffix = str(job.id)[:8]
+    return f"{base}-{suffix}"
 
 
 def _hash_for(payload: dict[str, Any], job: Job | None = None) -> str:
@@ -253,10 +261,13 @@ def _create_job(
         "review_reason": (
             "" if auto_publish else ("custom source" if not is_ats else "low confidence")
         ),
+        "parser_version": payload.get("parser_version", ""),
     }
     values.update({k: v for k, v in _update_values(payload).items() if k not in values})
     with transaction.atomic():
         job = Job.objects.create(company=company, **values)
+        job.slug = _unique_slug(job)
+        job.save(update_fields=["slug"])
         JobStatusEvent.objects.create(
             job=job,
             from_status="",
@@ -301,11 +312,15 @@ def _update_job(
     effective_hash = _hash_for(payload, job)
     material_change = effective_hash != job.content_hash
     url_changed = str(payload.get("source_url") or "") != job.source_url
+    parser_version = payload.get("parser_version", "")
+    parser_version_updated = parser_version and parser_version != job.parser_version
+
     if (
         not reopen
         and not values
         and not url_changed
         and not material_change
+        and not parser_version_updated
         and old_status == JobStatus.OPEN
     ):
         outcome = "unchanged"
@@ -323,6 +338,8 @@ def _update_job(
         if material_change and not company.is_ats:
             job.needs_review = True
             job.review_reason = "content changed"
+        if parser_version_updated:
+            job.parser_version = parser_version
         job.last_seen_at = now
         job.missing_count = 0
         job.save()
@@ -349,12 +366,16 @@ def _update_job(
 # The 3-strike ladder
 # ---------------------------------------------------------------------------
 def apply_missing_strikes(
-    *, company: Any, seen_job_ids: Iterable[Any], scrape_run_id: str | None = None
+    *,
+    company: Any,
+    seen_job_ids: Iterable[Any],
+    scrape_run_id: str | None = None,
 ) -> dict[str, Any]:
     """Apply one missing-strike round to a company's unseen jobs.
 
     NEVER deletes rows — closed jobs stay forever with a Closed label.
     """
+
     counts = {"possibly_closed": 0, "likely_closed": 0, "closed": 0, "untouched": 0}
     scope = (
         company.jobs.filter(

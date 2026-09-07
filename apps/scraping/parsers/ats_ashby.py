@@ -7,6 +7,8 @@ from apps.jobs.enums import JobType
 from apps.scraping.fetching import FetchResult
 
 logger = logging.getLogger("study_tracker.scraping.parsers.ashby")
+PARSER_NAME = "ashby"
+PARSER_VERSION = 1
 
 
 # Mapping from Ashby employmentType to JobType enum

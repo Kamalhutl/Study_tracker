@@ -17,6 +17,7 @@ API signatures confirmed directly from ``Scrapling-main`` (v0.4.14):
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from contextlib import AbstractContextManager
@@ -113,6 +114,7 @@ class FetchResult:
     elapsed_ms: int
     from_cache: bool
     escalation_reason: str
+    not_modified: bool = False
     xhr_payloads: list[dict[str, Any]] = field(default_factory=list)
 
     def _abs(self, href: str) -> str | None:
@@ -301,6 +303,10 @@ def fetch(
     robots check -> throttle slot -> dispatch -> size cap -> blocked re-check
     (redirect target) -> status mapping. Every Scrapling exception is wrapped.
     """
+    from django.utils import timezone
+
+    from .models import SourceFetchState
+
     url = str(normalize_url(_ensure_scheme(url)))
     if _blocked_host(url):
         raise FetchDomainBlocked(f"Domain for {url} is blocked", url=url)
@@ -322,12 +328,27 @@ def fetch(
     if mode is FetchMode.STEALTHY and not settings.FETCH_ALLOW_STEALTHY:
         raise FetchError("Stealthy fetching is disabled (FETCH_ALLOW_STEALTHY=False)", url=url)
 
+    # Conditional GET state — only for plain HTTP fetches
+    conditional_enabled = getattr(settings, "SCRAPE_CONDITIONAL_GET_ENABLED", True)
+    state = None
+    conditional_headers = {}
+    if mode == FetchMode.HTTP and conditional_enabled:
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+        state = SourceFetchState.objects.filter(url_hash=url_hash).first()
+        if state:
+            if state.etag:
+                conditional_headers["If-None-Match"] = state.etag
+            if state.last_modified:
+                conditional_headers["If-Modified-Since"] = state.last_modified
+
     import time
 
     started = time.perf_counter()
     try:
         if mode is FetchMode.HTTP:
-            response = _http_get(url, timeout=timeout)
+            # Pass conditional headers if any
+            headers = conditional_headers if conditional_headers else None
+            response = _http_get(url, timeout=timeout, headers=headers)
         elif mode is FetchMode.DYNAMIC:
             response = _dynamic_get(
                 url, timeout=timeout, xhr_pattern=xhr_pattern if capture_xhr else None
@@ -344,6 +365,30 @@ def fetch(
         )
 
     status = int(getattr(response, "status", 0))
+
+    # Handle 304 Not Modified
+    if status == 304:
+        # Update hit count and last fetched time
+        if state:
+            state.hit_count += 1
+            state.last_fetched_at = timezone.now()
+            state.save(update_fields=["hit_count", "last_fetched_at"])
+        # Return a result with not_modified=True, no html/selector
+        return FetchResult(
+            url=url,
+            final_url=url,  # same as requested
+            status_code=304,
+            html="",
+            selector=None,  # No selector for 304
+            fetcher_used=mode,
+            elapsed_ms=elapsed_ms,
+            from_cache=False,
+            escalation_reason="",
+            not_modified=True,
+            xhr_payloads=[],
+        )
+
+    # Map other error statuses
     if status in (404, 410):
         raise FetchNotFound(f"{url} returned {status}", url=url)
     if status in (403, 429):
@@ -351,7 +396,52 @@ def fetch(
     if status >= 500:
         raise FetchServerError(f"{url} returned {status}", url=url)
 
+    # For 200 or other success, proceed normally
     result = _to_fetch_result(url, response, mode, elapsed_ms)
+
+    # Body-hash comparison for unchanged detection (only for HTTP and conditional enabled)
+    if mode == FetchMode.HTTP and conditional_enabled and status == 200:
+        body_bytes = bytes(getattr(response, "body", b""))
+        body_hash = hashlib.sha256(body_bytes).hexdigest()
+        if state and state.body_hash and state.body_hash == body_hash:
+            # Body unchanged: treat as not_modified
+            # Update hit count and last fetched
+            state.hit_count += 1
+            state.last_fetched_at = timezone.now()
+            state.save(update_fields=["hit_count", "last_fetched_at"])
+            # Return a not_modified result but we have html and selector from the fetch.
+            # We'll set not_modified=True and keep the html/selector but downstream should skip parsing.
+            # We'll use dataclasses.replace to set not_modified.
+            from dataclasses import replace
+
+            result = replace(result, not_modified=True)
+            # Note: we still have html and selector, but tasks will check not_modified and skip.
+        else:
+            # Changed: update state with new validators and body_hash
+            etag = response.headers.get("ETag") or response.headers.get("Etag") or ""
+            last_modified = response.headers.get("Last-Modified") or ""
+            # Use update_or_create to create if not exists
+            SourceFetchState.objects.update_or_create(
+                url_hash=hashlib.sha256(url.encode()).hexdigest(),
+                defaults={
+                    "url": url,
+                    "etag": etag,
+                    "last_modified": last_modified,
+                    "body_hash": body_hash,
+                    "last_fetched_at": timezone.now(),
+                    # hit_count and miss_count: if state existed, we increment miss_count; else defaults 0
+                },
+            )
+            # If state existed, increment miss_count
+            if state:
+                state.miss_count += 1
+                state.save(update_fields=["miss_count"])
+            else:
+                # New state, miss_count defaults to 0
+                pass
+
+    # For non-200 or when conditional disabled, still update state if we got a 200 and have no state? Actually we only do above.
+    # Also handle capture_xhr
     if capture_xhr and mode is FetchMode.DYNAMIC:
         for xhr in getattr(response, "captured_xhr", []):
             try:
@@ -392,6 +482,18 @@ def head_ok(url: str, *, company: Any = None, timeout: int | None = None) -> tup
     return (200 <= status < 400), status
 
 
+def _clear_validators_for_url(url: str) -> None:
+    """Clear conditional GET state for a URL (blank validators)."""
+    if not url:
+        return
+    from .models import SourceFetchState
+
+    url_hash = hashlib.sha256(url.encode()).hexdigest()
+    SourceFetchState.objects.filter(url_hash=url_hash).update(
+        etag="", last_modified="", body_hash=""
+    )
+
+
 def fetch_with_escalation(
     url: str, *, company: Any = None, timeout: int | None = None
 ) -> FetchResult:
@@ -420,6 +522,9 @@ def fetch_with_escalation(
     if not settings.FETCH_ALLOW_DYNAMIC:
         # Browsers off: keep the HTTP copy but record why it might be JS-rendered.
         return replace(result, escalation_reason="; ".join(reasons))
+
+    # Clear stored validators before browser escalation - browser body hashes must never overwrite HTTP ones.
+    _clear_validators_for_url(url)
 
     try:
         dynamic = fetch(url, mode=FetchMode.DYNAMIC, timeout=timeout, company=company)

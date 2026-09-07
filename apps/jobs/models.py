@@ -32,10 +32,12 @@ class Job(UUIDModel, TimeStampedModel, SoftDeleteModel):
     normalized_source_url = models.CharField(max_length=1000, db_index=True)
     apply_url = models.URLField(max_length=1000, blank=True)
     content_hash = models.CharField(max_length=64, db_index=True)
+    parser_version = models.CharField(max_length=64, blank=True, db_index=True)
 
     # --- Content ---------------------------------------------------------
     title = models.CharField(max_length=500, db_index=True)
     title_normalized = models.CharField(max_length=500, db_index=True)
+    slug = models.SlugField(max_length=320, unique=True, db_index=True, blank=True, null=True)
     description = models.TextField(blank=True)
     description_html = models.TextField(blank=True)
     description_html_sanitized = models.TextField(blank=True)

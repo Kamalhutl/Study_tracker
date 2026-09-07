@@ -599,6 +599,7 @@ def record_scrape_outcome(
     failure_reason: str = "",
     jobs_seen: int = 0,
     now: datetime | None = None,
+    trusted: bool = True,
 ) -> Company:
     """Apply one scrape result to health/backoff state. Audit only on transitions."""
     target = now or timezone.now()
@@ -611,7 +612,8 @@ def record_scrape_outcome(
     if success:
         company.consecutive_failures = 0
         company.last_successful_scrape_at = target
-        company.last_jobs_seen = jobs_seen
+        if trusted:
+            company.last_jobs_seen = jobs_seen
         company.last_failure_reason = ""
         company.scrape_health = ScrapeHealth.HEALTHY
         company.next_scrape_at = company.compute_next_scrape_at(target, backoff_factor=1)

@@ -54,6 +54,24 @@ def dashboard_context(request: Any = None) -> dict[str, Any]:
     context["next_scrape_at"] = next_min
 
     context["last_detection_runs"] = DetectionRun.objects.select_related("company")[:10]
+
+    # Dashboard-only: CompanyAdmin has a 14-query budget enforced by tests/test_admin.py::TestQueryBudgets
+    from django.db.models import Q
+    from django.utils import timezone
+
+    from apps.scraping.models import ScrapeRun
+
+    cutoff = timezone.now() - timezone.timedelta(days=7)
+    unchanged_agg = ScrapeRun.objects.filter(created_at__gte=cutoff).aggregate(
+        total=Count("id"),
+        unchanged=Count("id", filter=Q(notes="not_modified")),
+    )
+    total_runs = unchanged_agg["total"] or 0
+    unchanged_runs = unchanged_agg["unchanged"] or 0
+    context["unchanged_rate_7d"] = (
+        f"{(unchanged_runs / total_runs) * 100:.1f}%" if total_runs else "—"
+    )
+    context["unchanged_rate_7d_detail"] = f"{unchanged_runs}/{total_runs}"
     return context
 
 

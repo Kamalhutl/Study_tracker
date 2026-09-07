@@ -46,5 +46,10 @@ var/
 celerybeat-schedule
 
 # Coverage artifacts
-*.zipopencode.json
+*.zip
+opencode.json
 .tmp/
+
+# Local test output
+a6_pytest.txt
+test_output.txt

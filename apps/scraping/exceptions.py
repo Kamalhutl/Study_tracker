@@ -72,3 +72,17 @@ class ThrottleUnavailable(FetchError):
     """Rate-limiter backend unreachable; refusing to fetch without a working throttle."""
 
     code = "throttle_unavailable"
+
+
+# Transient exception classification for retry logic
+TRANSIENT_EXCEPTIONS = (
+    FetchTimeout,
+    FetchServerError,
+    FetchBlocked,
+    ThrottleUnavailable,
+)
+
+
+def is_transient(exc: Exception) -> bool:
+    """Return True if the exception is transient and should be retried."""
+    return isinstance(exc, TRANSIENT_EXCEPTIONS)
