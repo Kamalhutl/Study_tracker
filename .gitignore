@@ -53,3 +53,6 @@ opencode.json
 # Local test output
 a6_pytest.txt
 test_output.txt
+
+# Smoke test logs
+var/

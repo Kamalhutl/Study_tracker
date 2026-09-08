@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 from django.conf import settings
 from rest_framework import serializers
@@ -82,7 +82,7 @@ class JobDetailSerializer(serializers.ModelSerializer):
     def get_canonical_url(self, obj) -> str:
         return f"{settings.SITE_BASE_URL}/jobs/{obj.slug}"
 
-    def get_structured_data(self, obj) -> Optional[Dict[str, Any]]:
+    def get_structured_data(self, obj) -> dict[str, Any] | None:
         return build_job_posting(obj)
 
 

@@ -5,8 +5,10 @@ export SSR_SERVICE_TOKEN="${SSR_SERVICE_TOKEN:-dev-ssr-token}"
 export SITE_BASE_URL="${SITE_BASE_URL:-http://localhost:3000}"
 DJANGO_PORT=8000
 NEXT_PORT=3000
-DJANGO_LOG=$(mktemp)
-NEXT_LOG=$(mktemp)
+LOG_DIR="${SMOKE_LOG_DIR:-$(pwd)/var/smoke}"
+mkdir -p "$LOG_DIR"
+DJANGO_LOG="$LOG_DIR/django.log"
+NEXT_LOG="$LOG_DIR/next.log"
 PAGE_TMP=$(mktemp)
 API_TMP=$(mktemp)
 DJANGO_PID=""
@@ -17,13 +19,15 @@ cleanup() {
   [ -n "$DJANGO_PID" ] && kill "$DJANGO_PID" 2>/dev/null || true
   lsof -ti :${DJANGO_PORT} 2>/dev/null | xargs kill 2>/dev/null || true
   lsof -ti :${NEXT_PORT} 2>/dev/null | xargs kill 2>/dev/null || true
-  rm -f "$PAGE_TMP" "$API_TMP" "$DJANGO_LOG" "$NEXT_LOG"
+  rm -f "$PAGE_TMP" "$API_TMP"
 }
 trap cleanup EXIT
 
 lsof -ti :${DJANGO_PORT} 2>/dev/null | xargs kill 2>/dev/null || true
 lsof -ti :${NEXT_PORT} 2>/dev/null | xargs kill 2>/dev/null || true
 sleep 1
+
+python manage.py migrate --noinput
 
 python manage.py runserver "127.0.0.1:${DJANGO_PORT}" --noreload >"$DJANGO_LOG" 2>&1 &
 DJANGO_PID=$!
@@ -60,17 +64,28 @@ for i in $(seq 1 60); do
 done
 
 SLUG=$(python manage.py shell -c "
+import hashlib
 import sys
 from apps.jobs.models import Job
+from apps.companies.models import Company
+
 job = Job.objects.filter(status='open', is_published=True).exclude(slug__isnull=True).exclude(slug='').first()
 if not job:
-    from apps.companies.models import Company
-    c = Company.objects.first()
+    from apps.accounts.models import User
+    actor = User.objects.filter(email='smoke@example.com').first()
+    if not actor:
+        actor = User.objects.create_user(email='smoke@example.com', password='smoke-pass-123')
+    c = Company.objects.filter(slug='smoke-corp').first()
     if not c:
-        c = Company(name='Smoke Corp', slug='smoke-corp', domain='smoke.test')
-        c.save()
-    import hashlib
-    job = Job(
+        c = Company.objects.create(
+            name='Smoke Corp',
+            slug='smoke-corp',
+            domain='smoke.test',
+            input_type='direct_career',
+            input_url='https://smoke.test/careers',
+            added_by=actor,
+        )
+    job = Job.objects.create(
         company=c,
         source_url='https://smoke.test/job',
         normalized_source_url='https://smoke.test/job',
@@ -81,7 +96,6 @@ if not job:
         status='open',
         is_published=True,
     )
-    job.save()
 sys.stdout.write(job.slug + '\n')
 " | tail -1)
 
