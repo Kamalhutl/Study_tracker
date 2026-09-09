@@ -66,6 +66,7 @@ class Command(BaseCommand):
             name="Acme Robotics",
             career_url="https://boards.greenhouse.io/acmerobotics",
             actor=actor,
+            verify=False,
             industry="Robotics",
             size_bucket="200-500",
         )
@@ -98,7 +99,10 @@ class Command(BaseCommand):
 
         # 3. Failing company — 4 consecutive failures.
         failing = company_services.add_company_from_direct_career_url(
-            name="Failing Co", career_url="https://failing.demo.example/careers", actor=actor
+            name="Failing Co",
+            career_url="https://failing.demo.example/careers",
+            actor=actor,
+            verify=False,
         )
         failing.scrape_health = ScrapeHealth.FAILING
         failing.consecutive_failures = 4
@@ -117,7 +121,10 @@ class Command(BaseCommand):
 
         # 4. Paused company — needs a human.
         paused = company_services.add_company_from_direct_career_url(
-            name="Paused Inc", career_url="https://paused.demo.example/careers", actor=actor
+            name="Paused Inc",
+            career_url="https://paused.demo.example/careers",
+            actor=actor,
+            verify=False,
         )
         paused.scrape_health = ScrapeHealth.PAUSED
         paused.is_active = False
@@ -224,6 +231,7 @@ class Command(BaseCommand):
             name="Due Now Co",
             career_url="https://boards.lever.co/duenow",
             actor=actor,
+            verify=False,
             description="Demo company that is due immediately.",
         )
         due.next_scrape_at = now - timedelta(minutes=5)
@@ -235,6 +243,7 @@ class Command(BaseCommand):
                 name=f"Bulk Co {i}",
                 career_url=f"https://bulk-{i}.demo.example/careers",
                 actor=actor,
+                verify=False,
                 description="Seeded bulk company.",
             )
             extra.scrape_health = ScrapeHealth.HEALTHY

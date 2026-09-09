@@ -200,6 +200,7 @@ def add_company_from_direct_career_url(
     actor: Any,
     website_url: str = "",
     scrape_interval_minutes: int | None = None,
+    verify: bool = True,
     **optional_meta: object,
 ) -> Company:
     """CASE B: admin already knows the career page — verified + scheduled immediately."""
@@ -240,9 +241,9 @@ def add_company_from_direct_career_url(
             career_url_set_by=actor,
             career_url_set_at=timezone.now(),
             detection_status=DetectionStatus.SKIPPED,
-            is_verified=True,
-            verified_by=actor,
-            verified_at=timezone.now(),
+            is_verified=verify,
+            verified_by=actor if verify else None,
+            verified_at=timezone.now() if verify else None,
             scrape_health=ScrapeHealth.UNKNOWN,
             **optional_meta,
         )
@@ -267,14 +268,15 @@ def add_company_from_direct_career_url(
             after=snapshot(company),
             source="ADMIN",
         )
-        record(
-            "company.verified",
-            actor=actor,
-            instance=company,
-            before={},
-            after=snapshot(company, ["career_url", "career_source_type", "is_verified"]),
-            source="ADMIN",
-        )
+        if verify:
+            record(
+                "company.verified",
+                actor=actor,
+                instance=company,
+                before={},
+                after=snapshot(company, ["career_url", "career_source_type", "is_verified"]),
+                source="ADMIN",
+            )
     return company
 
 
@@ -684,6 +686,23 @@ def reset_scrape_failures(*, company: Company, actor: Any) -> Company:
             instance=company,
             before={},
             after=snapshot(company, ["consecutive_failures", "scrape_health"]),
+            source="ADMIN",
+        )
+    return company
+
+
+def unverify_company(*, company: Company, actor: Any = None, reason: str = "") -> Company:
+    with transaction.atomic():
+        company.is_verified = False
+        company.verified_by = None
+        company.verified_at = None
+        company.save(update_fields=["is_verified", "verified_by", "verified_at", "updated_at"])
+        record(
+            "company.unverified",
+            actor=actor,
+            instance=company,
+            before={},
+            after=snapshot(company, ["is_verified", "verified_by", "verified_at"]),
             source="ADMIN",
         )
     return company

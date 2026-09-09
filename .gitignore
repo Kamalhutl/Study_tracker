@@ -56,3 +56,7 @@ test_output.txt
 
 # Smoke test logs
 var/
+
+# xkiro secrets
+.xkiro/
+keys.sh

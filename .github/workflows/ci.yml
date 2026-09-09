@@ -65,6 +65,8 @@ jobs:
         run: .venv/bin/python manage.py migrate --noinput
       - name: Run gates
         run: make gates
+      - name: Audit public surface
+        run: .venv/bin/python manage.py audit_public_surface
 
   web:
     runs-on: ubuntu-latest

@@ -1,61 +1,56 @@
-# PROMPT 16 — Job list page + crawl control
+# PROMPT 16.6 — company identity: keys, not hostnames
 
-GOAL
-Ship /jobs/ — search and browse — from the endpoints you already have,
-with crawl control that keeps faceted URLs out of the index.
+STANDING RULES (restated; your session resets lose these)
+- File contents via the editor tool only. No heredocs, no `cat >`, no shell
+  redirection, no multi-line quoted strings. One single-line shell command per call.
+- `upsert_job` and `apply_missing_strikes` have FROZEN signatures.
+- `record_scrape_outcome` is the only writer of company health state.
+- Admins never write Company fields directly. Every mutation goes through
+  `apps/companies/services.py`.
+- Sequential work only. No sub-agents, no parallel batches.
+- Do not report DONE while any item in your own todo list is unchecked.
 
-NON-GOALS:
-- No new API endpoints, no partial indexes, no Redis (all Prompt 17)
-- No home, company, or exam pages; no landing pages
-- No component library, no client-side state library
+0. Commit and push everything in the working tree first, excluding node_modules
+   and .next. Paste the commit SHA and the GitHub Actions run URL it triggers,
+   plus the conclusion of each of the three CI jobs separately.
 
-SCOPE
+1. REPORT FIRST, no code yet. Answer all four:
+   a. Which companies currently have an ATS host in `domain`? One line each:
+      slug | domain | career_url | is_active | ats_identifier
+   b. Paste the exact condition on `uniq_active_company_domain` (models.py:111-115).
+   c. Does `_dedupe_company` (services.py:133) filter on `is_active`? Quote the
+      queryset. If the service check and the DB constraint disagree about what
+      counts as a collision, say so explicitly.
+   d. Two rows appear to hold `figma.com` — `figma` and `Smoke Lever Co`. How?
 
-0. Carried over: paste the raw output of `make web-smoke` — the five
-   assertion lines verbatim, not the summary. Item 5 of 15.2 exists so
-   the run is auditable rather than merely green.
+2. Create one canonical ATS host table in `apps/companies/enums.py`, mapping host
+   to `CareerSourceType`. Include `job-boards.greenhouse.io` alongside
+   `boards.greenhouse.io`. Rewire `sniff_source_type_from_url` to read from it.
+   One mapping, one test suite, one truth — no second list anywhere.
 
-1. web/src/app/jobs/page.tsx — server component, reads searchParams.
+3. `domain` means the company's own domain. In Case B, when the career URL host is
+   in that table, leave `domain` null and populate `ats_identifier` from the URL
+   path. Never write an ATS host into `domain` again.
 
-2. Filter allowlist. One const mapping permitted UI params to API filter
-   names (job_type, work_mode, experience_level, city, q, page). Anything
-   outside it is dropped, never forwarded. Clamp page_size server-side to
-   a maximum. searchParams is attacker-controlled input and this page is
-   a proxy to your API — without an allowlist anyone can request an
-   unbounded page size.
+4. Dedup by identity: when `ats_identifier` is set, key on
+   (`career_source_type`, `ats_identifier`); otherwise key on `domain`. Add a
+   partial unique constraint for the ATS key. Both checks must use the same
+   is_active condition as the constraints they back.
 
-3. Two fetches: job list and facets.
-   - facets: next: { revalidate: 600 }
-   - unfiltered list: next: { revalidate: 300 }
-   - filtered lists: uncached
-   Reading searchParams makes the whole route dynamic, so the caching has
-   to live on the individual fetches or every visitor pays full price.
+5. Data migration: for existing rows whose `domain` is an ATS host, set `domain`
+   to null and backfill `ats_identifier` from `career_url`.
 
-4. generateMetadata, exactly these four cases:
-   - no filters, no page  -> robots index,follow; canonical = /jobs/
-   - page present, no filters -> index,follow; canonical = that page's
-     own URL including its page param
-   - any allowlisted filter present -> robots noindex,follow
-   - unknown params -> ignored, and absent from the canonical
+6. Report why the `netflix` row has an empty slug, then give it a real one through
+   the service layer.
 
-5. Pagination links built only from allowlisted params, preserving the
-   trailing slash on the path segment.
-
-6. Body: filter controls driven by the facets response, result cards
-   linking to /jobs/[slug]/, a result count, and an empty state.
-
-7. Extend web/scripts/smoke.sh with three assertions:
-   - /jobs/ returns 200, carries a self-canonical, and has no noindex
-   - /jobs/?job_type=internship returns 200 and contains noindex
-   - /jobs/?nonsense=1 has no "nonsense" anywhere in its canonical
-
-TESTS (vitest)
-- allowlist drops unknown keys and clamps page_size
-- unfiltered -> index; any filter -> noindex
-- page 2 self-canonicalizes to a URL containing its own page param
-- canonical never contains a param outside the allowlist
-- pagination link builder keeps the trailing slash on /jobs/
+7. Tests:
+   - Two Lever companies with different org slugs both created via Case B.
+   - Same org slug twice -> DuplicateCompany.
+   - `job-boards.greenhouse.io/foo` sniffs as GREENHOUSE, not UNKNOWN.
+   - No company row ends with an ATS host in `domain`.
 
 DONE WHEN
-make web-gates exits 0, and make web-smoke exits 0 with all eight
-assertion lines pasted.
+- `make gates` exits 0 — paste coverage percentage and test count.
+- `audit_public_surface` exits 0.
+- `make web-smoke` exits 0.
+- Pushed, with the CI run URL and all three job conclusions pasted.

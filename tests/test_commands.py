@@ -124,3 +124,8 @@ class TestSeedDemo:
         monkeypatch.setattr(settings, "ALLOW_DEMO_SEED", False, raising=False)
         with pytest.raises(CommandError):
             call_command("seed_demo", "--actor-email", actor.email)
+
+    def test_empty_seed_leaves_zero_verified(self, actor, monkeypatch):
+        monkeypatch.setattr(settings, "ALLOW_DEMO_SEED", True, raising=False)
+        call_command("seed_demo", "--actor-email", actor.email)
+        assert Company.all_objects.filter(is_verified=True).count() == 0

@@ -1,20 +1,92 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "xkiro-1/deepseek/deepseek-v4-pro",
+  "small_model": "xkiro-1/mistralai/ministral-8b",
+  "autoupdate": false,
+  "instructions": [
+    "AGENTS.md"
+  ],
   "provider": {
     "xkiro-1": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "xKiro 1",
       "options": {
         "baseURL": "https://api.xkiro.com/v1",
-        "apiKey": "{env:XKIRO_API_KEY_1}"
+        "apiKey": "{env:XKIRO_API_KEY_1}",
+        "timeout": 1800000
       },
       "models": {
         "deepseek/deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Free)"
+          "name": "deepseek/deepseek-v4-pro",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         },
-        "qwen/qwen3.8-max:free": {
-          "name": "Qwen3.8 Max (Free)"
+        "x-ai/grok-4.6": {
+          "name": "x-ai/grok-4.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/mistral-large-2512": {
+          "name": "mistralai/mistral-large-2512",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek/deepseek-v4-flash",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/devstral-medium": {
+          "name": "mistralai/devstral-medium",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/codestral-2508": {
+          "name": "mistralai/codestral-2508",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "minimax/minimax-m3:free": {
+          "name": "minimax/minimax-m3:free",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/ministral-8b": {
+          "name": "mistralai/ministral-8b",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         }
       }
     },
@@ -23,14 +95,81 @@
       "name": "xKiro 2",
       "options": {
         "baseURL": "https://api.xkiro.com/v1",
-        "apiKey": "{env:XKIRO_API_KEY_2}"
+        "apiKey": "{env:XKIRO_API_KEY_2}",
+        "timeout": 1800000
       },
       "models": {
         "deepseek/deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Free)"
+          "name": "deepseek/deepseek-v4-pro",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         },
-        "qwen/qwen3.8-max:free": {
-          "name": "Qwen3.8 Max (Free)"
+        "x-ai/grok-4.6": {
+          "name": "x-ai/grok-4.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/mistral-large-2512": {
+          "name": "mistralai/mistral-large-2512",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek/deepseek-v4-flash",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/devstral-medium": {
+          "name": "mistralai/devstral-medium",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/codestral-2508": {
+          "name": "mistralai/codestral-2508",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "minimax/minimax-m3:free": {
+          "name": "minimax/minimax-m3:free",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/ministral-8b": {
+          "name": "mistralai/ministral-8b",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         }
       }
     },
@@ -39,14 +178,81 @@
       "name": "xKiro 3",
       "options": {
         "baseURL": "https://api.xkiro.com/v1",
-        "apiKey": "{env:XKIRO_API_KEY_3}"
+        "apiKey": "{env:XKIRO_API_KEY_3}",
+        "timeout": 1800000
       },
       "models": {
         "deepseek/deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Free)"
+          "name": "deepseek/deepseek-v4-pro",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         },
-        "qwen/qwen3.8-max:free": {
-          "name": "Qwen3.8 Max (Free)"
+        "x-ai/grok-4.6": {
+          "name": "x-ai/grok-4.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/mistral-large-2512": {
+          "name": "mistralai/mistral-large-2512",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek/deepseek-v4-flash",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/devstral-medium": {
+          "name": "mistralai/devstral-medium",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/codestral-2508": {
+          "name": "mistralai/codestral-2508",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "minimax/minimax-m3:free": {
+          "name": "minimax/minimax-m3:free",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/ministral-8b": {
+          "name": "mistralai/ministral-8b",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         }
       }
     },
@@ -55,14 +261,81 @@
       "name": "xKiro 4",
       "options": {
         "baseURL": "https://api.xkiro.com/v1",
-        "apiKey": "{env:XKIRO_API_KEY_4}"
+        "apiKey": "{env:XKIRO_API_KEY_4}",
+        "timeout": 1800000
       },
       "models": {
         "deepseek/deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Free)"
+          "name": "deepseek/deepseek-v4-pro",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         },
-        "qwen/qwen3.8-max:free": {
-          "name": "Qwen3.8 Max (Free)"
+        "x-ai/grok-4.6": {
+          "name": "x-ai/grok-4.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/mistral-large-2512": {
+          "name": "mistralai/mistral-large-2512",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek/deepseek-v4-flash",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/devstral-medium": {
+          "name": "mistralai/devstral-medium",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/codestral-2508": {
+          "name": "mistralai/codestral-2508",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "minimax/minimax-m3:free": {
+          "name": "minimax/minimax-m3:free",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/ministral-8b": {
+          "name": "mistralai/ministral-8b",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         }
       }
     },
@@ -71,14 +344,81 @@
       "name": "xKiro 5",
       "options": {
         "baseURL": "https://api.xkiro.com/v1",
-        "apiKey": "{env:XKIRO_API_KEY_5}"
+        "apiKey": "{env:XKIRO_API_KEY_5}",
+        "timeout": 1800000
       },
       "models": {
         "deepseek/deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Free)"
+          "name": "deepseek/deepseek-v4-pro",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         },
-        "qwen/qwen3.8-max:free": {
-          "name": "Qwen3.8 Max (Free)"
+        "x-ai/grok-4.6": {
+          "name": "x-ai/grok-4.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/mistral-large-2512": {
+          "name": "mistralai/mistral-large-2512",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek/deepseek-v4-flash",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/devstral-medium": {
+          "name": "mistralai/devstral-medium",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/codestral-2508": {
+          "name": "mistralai/codestral-2508",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "minimax/minimax-m3:free": {
+          "name": "minimax/minimax-m3:free",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/ministral-8b": {
+          "name": "mistralai/ministral-8b",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         }
       }
     },
@@ -87,14 +427,81 @@
       "name": "xKiro 6",
       "options": {
         "baseURL": "https://api.xkiro.com/v1",
-        "apiKey": "{env:XKIRO_API_KEY_6}"
+        "apiKey": "{env:XKIRO_API_KEY_6}",
+        "timeout": 1800000
       },
       "models": {
         "deepseek/deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Free)"
+          "name": "deepseek/deepseek-v4-pro",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         },
-        "qwen/qwen3.8-max:free": {
-          "name": "Qwen3.8 Max (Free)"
+        "x-ai/grok-4.6": {
+          "name": "x-ai/grok-4.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/mistral-large-2512": {
+          "name": "mistralai/mistral-large-2512",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek/deepseek-v4-flash",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/devstral-medium": {
+          "name": "mistralai/devstral-medium",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/codestral-2508": {
+          "name": "mistralai/codestral-2508",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "minimax/minimax-m3:free": {
+          "name": "minimax/minimax-m3:free",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/ministral-8b": {
+          "name": "mistralai/ministral-8b",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         }
       }
     },
@@ -103,14 +510,81 @@
       "name": "xKiro 7",
       "options": {
         "baseURL": "https://api.xkiro.com/v1",
-        "apiKey": "{env:XKIRO_API_KEY_7}"
+        "apiKey": "{env:XKIRO_API_KEY_7}",
+        "timeout": 1800000
       },
       "models": {
         "deepseek/deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Free)"
+          "name": "deepseek/deepseek-v4-pro",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         },
-        "qwen/qwen3.8-max:free": {
-          "name": "Qwen3.8 Max (Free)"
+        "x-ai/grok-4.6": {
+          "name": "x-ai/grok-4.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/mistral-large-2512": {
+          "name": "mistralai/mistral-large-2512",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek/deepseek-v4-flash",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/devstral-medium": {
+          "name": "mistralai/devstral-medium",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/codestral-2508": {
+          "name": "mistralai/codestral-2508",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "minimax/minimax-m3:free": {
+          "name": "minimax/minimax-m3:free",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/ministral-8b": {
+          "name": "mistralai/ministral-8b",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         }
       }
     },
@@ -119,14 +593,81 @@
       "name": "xKiro 8",
       "options": {
         "baseURL": "https://api.xkiro.com/v1",
-        "apiKey": "{env:XKIRO_API_KEY_8}"
+        "apiKey": "{env:XKIRO_API_KEY_8}",
+        "timeout": 1800000
       },
       "models": {
         "deepseek/deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Free)"
+          "name": "deepseek/deepseek-v4-pro",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         },
-        "qwen/qwen3.8-max:free": {
-          "name": "Qwen3.8 Max (Free)"
+        "x-ai/grok-4.6": {
+          "name": "x-ai/grok-4.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/mistral-large-2512": {
+          "name": "mistralai/mistral-large-2512",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek/deepseek-v4-flash",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/devstral-medium": {
+          "name": "mistralai/devstral-medium",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/codestral-2508": {
+          "name": "mistralai/codestral-2508",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "minimax/minimax-m3:free": {
+          "name": "minimax/minimax-m3:free",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/ministral-8b": {
+          "name": "mistralai/ministral-8b",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         }
       }
     },
@@ -135,14 +676,81 @@
       "name": "xKiro 9",
       "options": {
         "baseURL": "https://api.xkiro.com/v1",
-        "apiKey": "{env:XKIRO_API_KEY_9}"
+        "apiKey": "{env:XKIRO_API_KEY_9}",
+        "timeout": 1800000
       },
       "models": {
         "deepseek/deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Free)"
+          "name": "deepseek/deepseek-v4-pro",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         },
-        "qwen/qwen3.8-max:free": {
-          "name": "Qwen3.8 Max (Free)"
+        "x-ai/grok-4.6": {
+          "name": "x-ai/grok-4.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "moonshotai/kimi-k2.6": {
+          "name": "moonshotai/kimi-k2.6",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/mistral-large-2512": {
+          "name": "mistralai/mistral-large-2512",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "deepseek/deepseek-v4-flash": {
+          "name": "deepseek/deepseek-v4-flash",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/devstral-medium": {
+          "name": "mistralai/devstral-medium",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/codestral-2508": {
+          "name": "mistralai/codestral-2508",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "minimax/minimax-m3:free": {
+          "name": "minimax/minimax-m3:free",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
+        },
+        "mistralai/ministral-8b": {
+          "name": "mistralai/ministral-8b",
+          "reasoning": false,
+          "tool_call": true,
+          "options": {
+            "timeout": 1800000
+          }
         }
       }
     }
