@@ -19,6 +19,7 @@ from apps.audit_logs.services import record, snapshot
 from core.utils import normalize_url
 
 from .enums import (
+    ATS_HOST_TABLE,
     MAX_CONSECUTIVE_FAILURES,
     MIN_SCRAPE_INTERVAL_MINUTES,
     CandidateStatus,
@@ -77,9 +78,11 @@ _ALL_ATS = {
 
 
 def sniff_source_type_from_url(url: str) -> tuple[CareerSourceType, str]:
-    """Pattern-match a career URL to ``(source_type, ats_identifier)``. Pure, no IO.
+    """Map a career URL to ``(source_type, ats_identifier)``. Pure, no IO.
 
-    Raises ``BlockedDomain`` for hosts in ``BLOCKED_DOMAINS``.
+    Reads the canonical ``ATS_HOST_TABLE`` (apps/companies/enums.py) — the single
+    source of truth for ATS host recognition. Raises ``BlockedDomain`` for hosts
+    in ``BLOCKED_DOMAINS``.
     """
     url = url.strip()
     if "://" not in url:
@@ -89,24 +92,19 @@ def sniff_source_type_from_url(url: str) -> tuple[CareerSourceType, str]:
     if _is_blocked(host):
         raise BlockedDomain(f"Domain {host} is blocked")
     org = _path_org(url)
+    sub = host.split(".")[0]
 
-    sub = host.split(".")[0]  # left-most label
-    if host == "boards.greenhouse.io" or host == "job-boards.greenhouse.io":
-        return CareerSourceType.GREENHOUSE, org
-    if host.endswith(".greenhouse.io"):
-        return CareerSourceType.GREENHOUSE, sub
-    if host == "jobs.lever.co":
-        return CareerSourceType.LEVER, org
-    if host.endswith(".jobs.lever.co"):
-        return CareerSourceType.LEVER, sub
-    if host == "jobs.ashbyhq.com":
-        return CareerSourceType.ASHBY, org
-    if host.endswith(".ashbyhq.com"):
-        return CareerSourceType.ASHBY, sub
-    if host in {"careers.smartrecruiters.com", "jobs.smartrecruiters.com"}:
-        return CareerSourceType.SMARTRECRUITERS, org
-    if host == "myworkdayjobs.com" or host.endswith(".myworkdayjobs.com"):
-        return CareerSourceType.WORKDAY, ""
+    for source_type, exact_hosts, subdomain_suffix, identifier_mode in ATS_HOST_TABLE:
+        if host in exact_hosts:
+            identifier = org if identifier_mode == "path" else ""
+            return source_type, identifier
+        if (
+            subdomain_suffix
+            and host.endswith(subdomain_suffix)
+            and host != subdomain_suffix.lstrip(".")
+        ):
+            identifier = sub if identifier_mode == "path" else ""
+            return source_type, identifier
     return CareerSourceType.OWN_CAREER_PAGE, ""
 
 
@@ -127,9 +125,25 @@ def _reject_pending_candidates(company: Company, reason: str) -> None:
     )
 
 
-def _dedupe_company(domain: str | None = None, career_url: str = "") -> None:
+def _dedupe_company(
+    domain: str | None = None,
+    career_url: str = "",
+    career_source_type: CareerSourceType | None = None,
+    ats_identifier: str = "",
+) -> None:
     existing = None
-    if domain:
+    # If we have an ATS identity, dedupe by (source_type, identifier)
+    if career_source_type and ats_identifier:
+        existing = (
+            Company.all_objects.filter(
+                career_source_type=career_source_type,
+                ats_identifier=ats_identifier,
+                is_deleted=False,
+            )
+            .exclude(ats_identifier="")
+            .first()
+        )
+    if existing is None and domain:
         existing = Company.all_objects.filter(domain=domain, is_deleted=False).first()
     if existing is None and career_url:
         existing = (
@@ -221,11 +235,23 @@ def add_company_from_direct_career_url(
     source_type, ats_identifier = sniff_source_type_from_url(career_url)
     normalized_career = normalize_url(career_url)
     domain = _extract_domain(normalized_career)
-    if not domain:
+    # If the host is an ATS, domain must be null (Case B rule)
+    from .enums import is_ats_host
+
+    is_ats = is_ats_host(domain) if domain else False
+    if not is_ats and not domain:
         from django.core.exceptions import ValidationError
 
         raise ValidationError(f"Could not extract a domain from {career_url!r}")
-    _dedupe_company(domain=domain, career_url=normalized_career)
+    if is_ats:
+        domain = None
+    # Dedupe by identity: if ATS, use (source_type, ats_identifier); otherwise domain/career_url
+    _dedupe_company(
+        domain=domain,
+        career_url=normalized_career,
+        career_source_type=source_type if is_ats else None,
+        ats_identifier=ats_identifier if is_ats else "",
+    )
 
     with transaction.atomic():
         company: Company = Company.objects.create(

@@ -1,46 +1,54 @@
-# Execution rules (opencode auto-loads this file)
-
-These rules override anything in a prompt file that contradicts them.
+# Rules
 
 ## Output format
 
-- NEVER emit `<antThinking>`, `<antThought>`, `<thinking>`, or any other XML-style
-  reasoning tag in your response. Reason silently. If you catch yourself opening
-  such a tag, stop and rewrite the message without it.
-- No "Let me..." narration. No announcing what you are about to read.
-- Before each tool call, one line only: `STEP <n> | <action>`.
+- Never emit `<thinking>`, `<antThinking>`, `<antThought>`, `<reasoning>` or any
+  similar tag. If your internal reasoning appears in the reply, you have failed.
+- Start every step with one line: `STEP <n> | <what you are doing>`
+- A step is finished when its VERIFY command exits 0. Not before.
 
-## Sequencing (hard)
+## Keep going - do not stop mid-task
 
-- ONE tool call per response. Never batch. Never say "in parallel".
-- Never spawn sub-agents or task batches.
-- Max 3 read/grep calls per step. If you still lack context after 3, write the
-  code with what you have and let the tests tell you what is wrong.
-- There is no exploration phase. Every file you need is listed in the prompt's
-  FILE MANIFEST. Do not go looking for others.
+This is the most important rule on this page.
 
-## Step discipline
+- After finishing a step, **immediately begin the next unchecked item**. Do not
+  wait to be told to continue.
+- Stop only for one of two reasons:
+  1. every item on the list is checked, or
+  2. you write `BLOCKED step <n>: <reason>` after two failed VERIFY attempts.
+- Never end a reply with a question while unchecked work remains. Choose the most
+  reasonable option, state the choice in one line, and keep working.
+- Never end a reply by describing what you are "about to do" or "will do next".
+  Do it in the same reply instead.
+- Never end a reply with a progress summary while items remain unchecked. A
+  summary is the last thing you write, not a checkpoint.
+- If a step turns out to be already done, mark it `[x] (already present)` and
+  move to the next one in the same reply.
 
-- Do exactly one numbered step per response, then immediately run that step's
-  VERIFY command before moving on.
-- Update the todo list after every single step. Mark it `[x]` only after VERIFY
-  passes.
-- If a step's target already exists in the codebase, mark it `[x] (already
-  present)` and move to the next step. Do not rewrite working code.
-- If VERIFY fails twice on the same step, stop and print:
-  `BLOCKED step <n>: <one line reason>` then continue to the next independent step.
+## Context budget
+
+Long sessions die when the context window fills. Protect it.
+
+- Read at most 3 files per step.
+- Never re-read a file you have already read in this session. Use what you read.
+- When you need several files, request them together in one batch rather than one
+  at a time. Fewer round trips means less context burned.
+- Never paste a whole file back into your reply. Quote only the lines you change.
+- Do not restate the todo list in every reply. Reference item numbers.
+- No open-ended exploration. If you cannot find something after 3 searches, write
+  `BLOCKED` and say what you looked for.
 
 ## Editing
 
-- Editor tool only. No heredocs, no `cat >`, no shell redirection, no multi-line
-  quoted strings. One single-line shell command per call.
-- Single-quote all globs: `--include='*.py'`. An unmatched glob is fatal in zsh.
-- `upsert_job` and `apply_missing_strikes` have FROZEN signatures. Do not touch.
+- Use the editor tool only. No heredocs, no `cat >`, no shell redirection into
+  files, no multi-line quoted strings.
+- One single-line shell command per call.
+- Single-quote globs: `--include='*.py'`
+
+## Project invariants - do not violate
+
+- `upsert_job` and `apply_missing_strikes` have FROZEN signatures. Do not change
+  their parameters or return types.
 - `record_scrape_outcome` is the only writer of company health state.
-- Admins never write Company fields directly. Every mutation goes through
-  `apps/companies/services.py`.
-
-## Definition of done
-
-A step is done when its VERIFY command exits 0. Not when you believe the code is
-correct.
+- Admin code never writes Company fields directly. Go through the service layer.
+- Work sequentially. No sub-agent delegation, no parallel task batches.

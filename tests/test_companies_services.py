@@ -343,3 +343,50 @@ class TestDetailsUpdate:
         assert company.description == "New description"
         assert company.career_url == f"https://{company.domain}/careers"
         assert _audit("company.updated") == 1
+
+
+class TestATSIdentityAndDedup:
+    def test_two_lever_orgs_different(self, actor):
+        c1 = services.add_company_from_direct_career_url(
+            name="Lever1", career_url="https://jobs.lever.co/org1", actor=actor
+        )
+        c2 = services.add_company_from_direct_career_url(
+            name="Lever2", career_url="https://jobs.lever.co/org2", actor=actor
+        )
+        assert c1.domain is None
+        assert c1.ats_identifier == "org1"
+        assert c2.domain is None
+        assert c2.ats_identifier == "org2"
+        assert c1.id != c2.id
+
+    def test_same_org_slug_duplicate(self, actor):
+        services.add_company_from_direct_career_url(
+            name="LeverDup1", career_url="https://jobs.lever.co/orgdup", actor=actor
+        )
+        with pytest.raises(DuplicateCompany):
+            services.add_company_from_direct_career_url(
+                name="LeverDup2", career_url="https://jobs.lever.co/orgdup", actor=actor
+            )
+
+    def test_job_boards_greenhouse_sniff(self, actor):
+        company = services.add_company_from_direct_career_url(
+            name="GreenhouseJobBoards",
+            career_url="https://job-boards.greenhouse.io/foo",
+            actor=actor,
+        )
+        assert company.career_source_type == CareerSourceType.GREENHOUSE
+        assert company.ats_identifier == "foo"
+        assert company.domain is None
+
+    def test_no_ats_host_in_domain(self, actor):
+        # Create a company with ATS host in domain should be null
+        company = services.add_company_from_direct_career_url(
+            name="NoAtsDomain", career_url="https://jobs.lever.co/noats", actor=actor
+        )
+        assert company.domain is None
+        # Also check existing companies after migration: we can query all and assert none have domain that is an ATS host
+        from apps.companies.enums import is_ats_host
+
+        ats_domain_companies = Company.all_objects.filter(domain__isnull=False).exclude(domain="")
+        for c in ats_domain_companies:
+            assert not is_ats_host(c.domain)

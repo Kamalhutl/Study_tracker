@@ -60,3 +60,13 @@ var/
 # xkiro secrets
 .xkiro/
 keys.sh
+
+# Stray local artifacts
+.bak/
+show
+switch
+opencode.json.bak*
+web/.next/
+web/node_modules/
+opencode.json.prelimit.bak
+opencode.json.preschema.bak

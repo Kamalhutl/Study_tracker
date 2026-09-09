@@ -22,6 +22,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "x-ai/grok-4.6": {
@@ -30,6 +34,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32000
           }
         },
         "moonshotai/kimi-k2.6": {
@@ -38,6 +46,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/mistral-large-2512": {
@@ -46,6 +58,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "deepseek/deepseek-v4-flash": {
@@ -54,6 +70,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "mistralai/devstral-medium": {
@@ -62,6 +82,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/codestral-2508": {
@@ -70,6 +94,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 256000,
+            "output": 16384
           }
         },
         "minimax/minimax-m3:free": {
@@ -78,6 +106,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 192000,
+            "output": 16384
           }
         },
         "mistralai/ministral-8b": {
@@ -86,6 +118,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
           }
         }
       }
@@ -105,6 +141,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "x-ai/grok-4.6": {
@@ -113,6 +153,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32000
           }
         },
         "moonshotai/kimi-k2.6": {
@@ -121,6 +165,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/mistral-large-2512": {
@@ -129,6 +177,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "deepseek/deepseek-v4-flash": {
@@ -137,6 +189,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "mistralai/devstral-medium": {
@@ -145,6 +201,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/codestral-2508": {
@@ -153,6 +213,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 256000,
+            "output": 16384
           }
         },
         "minimax/minimax-m3:free": {
@@ -161,6 +225,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 192000,
+            "output": 16384
           }
         },
         "mistralai/ministral-8b": {
@@ -169,6 +237,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
           }
         }
       }
@@ -188,6 +260,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "x-ai/grok-4.6": {
@@ -196,6 +272,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32000
           }
         },
         "moonshotai/kimi-k2.6": {
@@ -204,6 +284,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/mistral-large-2512": {
@@ -212,6 +296,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "deepseek/deepseek-v4-flash": {
@@ -220,6 +308,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "mistralai/devstral-medium": {
@@ -228,6 +320,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/codestral-2508": {
@@ -236,6 +332,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 256000,
+            "output": 16384
           }
         },
         "minimax/minimax-m3:free": {
@@ -244,6 +344,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 192000,
+            "output": 16384
           }
         },
         "mistralai/ministral-8b": {
@@ -252,6 +356,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
           }
         }
       }
@@ -271,6 +379,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "x-ai/grok-4.6": {
@@ -279,6 +391,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32000
           }
         },
         "moonshotai/kimi-k2.6": {
@@ -287,6 +403,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/mistral-large-2512": {
@@ -295,6 +415,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "deepseek/deepseek-v4-flash": {
@@ -303,6 +427,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "mistralai/devstral-medium": {
@@ -311,6 +439,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/codestral-2508": {
@@ -319,6 +451,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 256000,
+            "output": 16384
           }
         },
         "minimax/minimax-m3:free": {
@@ -327,6 +463,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 192000,
+            "output": 16384
           }
         },
         "mistralai/ministral-8b": {
@@ -335,6 +475,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
           }
         }
       }
@@ -354,6 +498,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "x-ai/grok-4.6": {
@@ -362,6 +510,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32000
           }
         },
         "moonshotai/kimi-k2.6": {
@@ -370,6 +522,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/mistral-large-2512": {
@@ -378,6 +534,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "deepseek/deepseek-v4-flash": {
@@ -386,6 +546,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "mistralai/devstral-medium": {
@@ -394,6 +558,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/codestral-2508": {
@@ -402,6 +570,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 256000,
+            "output": 16384
           }
         },
         "minimax/minimax-m3:free": {
@@ -410,6 +582,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 192000,
+            "output": 16384
           }
         },
         "mistralai/ministral-8b": {
@@ -418,6 +594,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
           }
         }
       }
@@ -437,6 +617,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "x-ai/grok-4.6": {
@@ -445,6 +629,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32000
           }
         },
         "moonshotai/kimi-k2.6": {
@@ -453,6 +641,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/mistral-large-2512": {
@@ -461,6 +653,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "deepseek/deepseek-v4-flash": {
@@ -469,6 +665,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "mistralai/devstral-medium": {
@@ -477,6 +677,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/codestral-2508": {
@@ -485,6 +689,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 256000,
+            "output": 16384
           }
         },
         "minimax/minimax-m3:free": {
@@ -493,6 +701,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 192000,
+            "output": 16384
           }
         },
         "mistralai/ministral-8b": {
@@ -501,6 +713,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
           }
         }
       }
@@ -520,6 +736,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "x-ai/grok-4.6": {
@@ -528,6 +748,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32000
           }
         },
         "moonshotai/kimi-k2.6": {
@@ -536,6 +760,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/mistral-large-2512": {
@@ -544,6 +772,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "deepseek/deepseek-v4-flash": {
@@ -552,6 +784,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "mistralai/devstral-medium": {
@@ -560,6 +796,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/codestral-2508": {
@@ -568,6 +808,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 256000,
+            "output": 16384
           }
         },
         "minimax/minimax-m3:free": {
@@ -576,6 +820,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 192000,
+            "output": 16384
           }
         },
         "mistralai/ministral-8b": {
@@ -584,6 +832,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
           }
         }
       }
@@ -603,6 +855,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "x-ai/grok-4.6": {
@@ -611,6 +867,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32000
           }
         },
         "moonshotai/kimi-k2.6": {
@@ -619,6 +879,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/mistral-large-2512": {
@@ -627,6 +891,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "deepseek/deepseek-v4-flash": {
@@ -635,6 +903,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "mistralai/devstral-medium": {
@@ -643,6 +915,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/codestral-2508": {
@@ -651,6 +927,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 256000,
+            "output": 16384
           }
         },
         "minimax/minimax-m3:free": {
@@ -659,6 +939,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 192000,
+            "output": 16384
           }
         },
         "mistralai/ministral-8b": {
@@ -667,6 +951,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
           }
         }
       }
@@ -686,6 +974,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "x-ai/grok-4.6": {
@@ -694,6 +986,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32000
           }
         },
         "moonshotai/kimi-k2.6": {
@@ -702,6 +998,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/mistral-large-2512": {
@@ -710,6 +1010,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "deepseek/deepseek-v4-flash": {
@@ -718,6 +1022,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 32000
           }
         },
         "mistralai/devstral-medium": {
@@ -726,6 +1034,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
           }
         },
         "mistralai/codestral-2508": {
@@ -734,6 +1046,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 256000,
+            "output": 16384
           }
         },
         "minimax/minimax-m3:free": {
@@ -742,6 +1058,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 192000,
+            "output": 16384
           }
         },
         "mistralai/ministral-8b": {
@@ -750,6 +1070,10 @@
           "tool_call": true,
           "options": {
             "timeout": 1800000
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
           }
         }
       }

@@ -31,7 +31,7 @@ class Company(UUIDModel, TimeStampedModel, SoftDeleteModel):
     # --- Identity -------------------------------------------------------
     name = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(max_length=280, unique=True)
-    domain = models.CharField(max_length=255, db_index=True)
+    domain = models.CharField(max_length=255, blank=True, null=True, db_index=True)
     logo_url = models.URLField(max_length=500, blank=True)
     description = models.TextField(blank=True)
     hq_location = models.CharField(max_length=255, blank=True)
@@ -117,6 +117,11 @@ class Company(UUIDModel, TimeStampedModel, SoftDeleteModel):
                 fields=["career_url"],
                 condition=Q(is_deleted=False) & ~Q(career_url=""),
                 name="uniq_active_career_url",
+            ),
+            models.UniqueConstraint(
+                fields=["career_source_type", "ats_identifier"],
+                condition=Q(is_deleted=False) & ~Q(ats_identifier=""),
+                name="uniq_active_ats_identity",
             ),
             models.CheckConstraint(
                 condition=Q(scrape_interval_minutes__gte=MIN_SCRAPE_INTERVAL_MINUTES),
